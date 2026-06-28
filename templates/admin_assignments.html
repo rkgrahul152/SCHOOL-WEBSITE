@@ -1,0 +1,21 @@
+{% extends "admin_base.html" %}{% block title %}Assignments{% endblock %}
+{% block admin_content %}
+<div class="admin-topbar-row"><div><div class="admin-page-title">📋 Manage Assignments</div><div class="admin-page-sub">Post homework and assignments for students</div></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">➕ Add Assignment</div></div>
+  <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_add_assignment') }}" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Title *</label><input type="text" name="title" class="form-control" placeholder="Assignment title" required></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Description</label><textarea name="description" class="form-control" rows="2" placeholder="Instructions..."></textarea></div>
+      <div class="form-group"><label>Subject *</label><input type="text" name="subject" class="form-control" placeholder="e.g. Mathematics" required></div>
+      <div class="form-group"><label>Class *</label><select name="class" class="form-control" required><option value="">Select</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}">Class {{ c }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label>Section</label><select name="section" class="form-control"><option value="All">All Sections</option><option>A</option><option>B</option><option>C</option><option>D</option><option>Science</option><option>Arts</option></select></div>
+      <div class="form-group"><label>Due Date</label><input type="date" name="due_date" class="form-control"></div>
+      <div class="form-group"><label>Attach File (PDF/Image)</label><input type="file" name="file" class="form-control" accept=".pdf,.png,.jpg,.jpeg"></div>
+    </div>
+    <div style="margin-top:13px"><button type="submit" class="btn-gold">📋 Add Assignment</button></div>
+  </form></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">📋 All Assignments ({{ assignments|length }})</div></div>
+  <div class="admin-card-body" style="padding:0"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>#</th><th>Title</th><th>Subject</th><th>Class</th><th>Section</th><th>Due</th><th>File</th></tr></thead><tbody>
+    {% for a in assignments %}<tr><td>{{ loop.index }}</td><td style="font-weight:600;color:var(--white)">{{ a.title }}</td><td><span class="badge badge-gold">{{ a.subject }}</span></td><td>{{ a.class }}</td><td>{{ a.section }}</td><td style="font-size:.77rem">{{ a.due_date or '—' }}</td><td>{% if a.file_path %}<a href="{{ url_for('static',filename='images/'+a.file_path) }}" class="badge badge-blue" download>⬇</a>{% else %}<span style="color:rgba(255,255,255,.2)">—</span>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px">No assignments yet.</td></tr>{% endfor %}
+  </tbody></table></div></div></div>{% endblock %}

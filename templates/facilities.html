@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% block title %}Facilities – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="page-hero-content">
+  <div class="breadcrumb"><a href="/">Home</a><span>›</span><span>Facilities</span></div>
+  <h1>School <span style="color:var(--accent)">Facilities</span></h1>
+  <p>Modern infrastructure built for comprehensive holistic learning</p>
+</div></div>
+<section class="section"><div class="container">
+  {% if facilities %}
+  <div class="facilities-grid">
+    {% for f in facilities %}
+    <div class="facility-card-full reveal">
+      <div class="facility-photo">
+        {% if f.photo %}<img src="{{ url_for('static',filename='images/'+f.photo) }}" alt="{{ f.name }}" loading="lazy">
+        {% else %}<div class="facility-photo-placeholder"><span style="font-size:3.2rem">{{ f.icon or '🏫' }}</span></div>{% endif %}
+        <div class="facility-photo-badge">{{ f.icon or '🏫' }}</div>
+      </div>
+      <div class="facility-content">
+        <h3 class="facility-title">{{ f.name }}</h3>
+        {% if f.description %}<p class="facility-desc">{{ f.description }}</p>{% endif %}
+        {% if f.details %}<div class="facility-features">{% for t in f.details.split('|') %}<span class="feature-tag">{{ t.strip() }}</span>{% endfor %}</div>{% endif %}
+      </div>
+    </div>{% endfor %}
+  </div>
+  {% else %}
+  <div class="grid-3">{% for f in [('🖥️','Smart Classrooms','Interactive digital teaching.','Projector | Smart Board | Wi-Fi'),('📚','Library','10,000+ books for all subjects.','10,000+ Books | Reading Room'),('💻','Computer Lab','40+ modern computers.','40+ Systems | High-Speed Net'),('⚽','Playground','Sports ground for all activities.','Football | Cricket | Athletics'),('🔬','Science Lab','Physics, Chemistry & Biology.','Physics Lab | Chemistry Lab'),('🍽️','Mid-Day Meal','Govt. meal programme.','Daily Meals | Hygienic Kitchen')] %}
+  <div class="glass-card reveal" style="padding:26px"><span style="font-size:2.2rem;margin-bottom:12px;display:block">{{ f[0] }}</span><div class="facility-title">{{ f[1] }}</div><div class="facility-desc">{{ f[2] }}</div><div class="facility-features" style="margin-top:10px">{% for t in f[3].split('|') %}<span class="feature-tag">{{ t.strip() }}</span>{% endfor %}</div></div>
+  {% endfor %}</div>{% endif %}
+</div></section>{% endblock %}

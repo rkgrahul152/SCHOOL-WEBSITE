@@ -1,0 +1,27 @@
+{% extends "admin_base.html" %}{% block title %}Attendance{% endblock %}
+{% block admin_content %}
+<div class="admin-topbar-row"><div><div class="admin-page-title">✅ Manage Attendance</div><div class="admin-page-sub">Record daily student attendance</div></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">🔍 Select Class</div></div>
+  <div class="admin-card-body">
+    <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0">
+      <select name="class" class="form-control" style="width:auto">{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}" {{ 'selected' if filter_class==c else '' }}>Class {{ c }}</option>{% endfor %}</select>
+      <select name="section" class="form-control" style="width:auto">{% for s in ['A','B','C','D','Science','Arts'] %}<option value="{{ s }}" {{ 'selected' if filter_section==s else '' }}>{{ s }}</option>{% endfor %}</select>
+      <button type="submit" class="btn-gold btn-sm">🔍 Load Students</button>
+    </form>
+  </div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">✏️ Mark Attendance — Class {{ filter_class }}-{{ filter_section }}</div></div>
+  <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_mark_attendance') }}">
+    <input type="hidden" name="class" value="{{ filter_class }}"><input type="hidden" name="section" value="{{ filter_section }}">
+    <div class="form-grid">
+      <div class="form-group"><label>Student *</label><select name="roll_number" class="form-control" required><option value="">Select Student</option>{% for s in students %}<option value="{{ s.roll_number }}">Roll {{ s.roll_number }} – {{ s.name }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label>Date *</label><input type="date" name="date" class="form-control" required></div>
+      <div class="form-group"><label>Status *</label><select name="status" class="form-control" required><option value="Present">✅ Present</option><option value="Absent">❌ Absent</option><option value="Late">🕐 Late</option><option value="Leave">📋 Leave</option></select></div>
+    </div>
+    <div style="margin-top:13px"><button type="submit" class="btn-gold">✅ Mark Attendance</button></div>
+  </form></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">📋 Recent Records</div></div>
+  <div class="admin-card-body" style="padding:0"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>#</th><th>Roll</th><th>Date</th><th>Status</th></tr></thead><tbody>
+    {% for a in attendance %}<tr><td>{{ loop.index }}</td><td style="font-weight:700;color:var(--accent)">{{ a.roll_number }}</td><td>{{ a.date }}</td>
+    <td>{% if a.status=='Present' %}<span class="badge badge-green">✅ Present</span>{% elif a.status=='Absent' %}<span class="badge badge-red">❌ Absent</span>{% elif a.status=='Late' %}<span class="badge badge-gold">🕐 Late</span>{% else %}<span class="badge badge-blue">{{ a.status }}</span>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px">No records. Select a class above.</td></tr>{% endfor %}
+  </tbody></table></div></div></div>{% endblock %}

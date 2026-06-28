@@ -1,0 +1,30 @@
+{% extends "admin_base.html" %}{% block title %}Students{% endblock %}
+{% block admin_content %}
+<div class="admin-topbar-row"><div><div class="admin-page-title">🎓 Manage Students</div><div class="admin-page-sub">Add and manage student accounts</div></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">➕ Add Student</div></div>
+  <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_add_student') }}">
+    <div class="form-grid">
+      <div class="form-group"><label>Class *</label><select name="class" class="form-control" required><option value="">Select</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}">Class {{ c }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label>Section *</label><select name="section" class="form-control" required><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="Science">Science</option><option value="Arts">Arts</option></select></div>
+      <div class="form-group"><label>Roll Number *</label><input type="text" name="roll_number" class="form-control" placeholder="e.g. 1, 2, 3" required></div>
+      <div class="form-group"><label>Student Name *</label><input type="text" name="name" class="form-control" placeholder="Full name" required></div>
+      <div class="form-group"><label>Guardian Name</label><input type="text" name="guardian" class="form-control" placeholder="Parent/Guardian"></div>
+      <div class="form-group"><label>Phone</label><input type="text" name="phone" class="form-control"></div>
+      <div class="form-group"><label>Password</label><input type="text" name="password" class="form-control" value="student123"></div>
+    </div>
+    <div style="margin-top:13px"><button type="submit" class="btn-gold">🎓 Add Student</button></div>
+  </form></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">🎓 Students ({{ students|length }})</div></div>
+  <div class="admin-card-body" style="padding:12px">
+    <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <select name="class" class="form-control" style="width:auto"><option value="">All Classes</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}" {{ 'selected' if filter_class==c else '' }}>Class {{ c }}</option>{% endfor %}</select>
+      <select name="section" class="form-control" style="width:auto"><option value="">All Sections</option>{% for s in ['A','B','C','D','Science','Arts'] %}<option value="{{ s }}" {{ 'selected' if filter_section==s else '' }}>{{ s }}</option>{% endfor %}</select>
+      <button type="submit" class="btn-gold btn-sm">🔍 Filter</button>
+      <a href="{{ url_for('admin_students') }}" class="btn-outline" style="padding:5px 12px;font-size:.78rem">Clear</a>
+    </form>
+    <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>#</th><th>Roll</th><th>Name</th><th>Class</th><th>Section</th><th>Guardian</th><th>Phone</th><th></th></tr></thead><tbody>
+      {% for s in students %}<tr><td>{{ loop.index }}</td><td style="font-weight:700;color:var(--accent)">{{ s.roll_number }}</td><td style="font-weight:600;color:var(--white)">{{ s.name }}</td><td>{{ s.class }}</td><td><span class="badge badge-gold">{{ s.section }}</span></td><td style="font-size:.79rem">{{ s.guardian or '—' }}</td><td style="font-size:.79rem">{{ s.phone or '—' }}</td>
+      <td><a href="{{ url_for('admin_delete_student',i=s.id) }}" class="btn-danger" onclick="return confirm('Remove?')">🗑</a></td></tr>
+      {% else %}<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px">No students found.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </div></div>{% endblock %}

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>{% block title %}{{ settings.school_name }}{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<div id="preloader"><div class="pl-inner">
+  <div class="pl-logo">{% if settings.school_logo %}<img src="{{ url_for('static',filename='images/'+settings.school_logo) }}" alt="logo">{% else %}<svg viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="38" stroke="#f0b429" stroke-width="2"/><path d="M40 10 L50 30 L72 30 L55 45 L62 67 L40 54 L18 67 L25 45 L8 30 L30 30 Z" fill="#f0b429"/></svg>{% endif %}</div>
+  <div class="pl-name">{{ settings.school_name }}</div>
+  <div class="pl-bar"><div class="pl-fill"></div></div>
+</div></div>
+
+<div class="topbar"><div class="topbar-inner">
+  <div class="topbar-left"><span>📞 {{ settings.phone }}</span><span>✉ {{ settings.email }}</span></div>
+  <div class="topbar-right">
+    <a href="{{ url_for('student_login') }}" class="topbar-link">Student Portal</a>
+    <a href="{{ url_for('admin_login') }}" class="topbar-link">Admin</a>
+    <span class="topbar-tag">Govt. Aided School</span>
+  </div>
+</div></div>
+
+<nav class="navbar" id="navbar"><div class="nav-container">
+  <a href="{{ url_for('index') }}" class="nav-brand">
+    <div class="nav-logo">{% if settings.school_logo %}<img src="{{ url_for('static',filename='images/'+settings.school_logo) }}" alt="logo">{% else %}<svg viewBox="0 0 60 60" fill="none" width="44" height="44"><circle cx="30" cy="30" r="28" fill="rgba(240,180,41,.12)" stroke="#f0b429" stroke-width="1.5"/><path d="M30 8 L37 22 L53 22 L40 32 L45 47 L30 38 L15 47 L20 32 L7 22 L23 22 Z" fill="#f0b429"/></svg>{% endif %}</div>
+    <div class="nav-name"><span class="nav-school-name">{{ settings.school_name }}</span><span class="nav-school-sub">Est. {{ settings.established }} · Class V–XII</span></div>
+  </a>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint=='index' %}active{% endif %}">Home</a></li>
+    <li><a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint=='about' %}active{% endif %}">About</a></li>
+    <li class="nav-dropdown">
+      <a href="{{ url_for('academics') }}" class="nav-link {% if request.endpoint in ['academics','class_page'] %}active{% endif %}">Academics ▾</a>
+      <div class="dropdown-menu">
+        <div class="dropdown-col">
+          <div class="dropdown-heading">Class V–IX</div>
+          {% for c in ['5','6','7','8','9'] %}<div class="dropdown-subgroup"><span class="dropdown-label">Class {{ c }}</span>{% for s in ['A','B','C','D'] %}<a href="{{ url_for('class_page',cn=c,sec=s) }}">{{ s }}</a>{% endfor %}</div>{% endfor %}
+        </div>
+        <div class="dropdown-col">
+          <div class="dropdown-heading">Secondary</div>
+          <div class="dropdown-subgroup"><span class="dropdown-label">Class 10</span>{% for s in ['A','B','C'] %}<a href="{{ url_for('class_page',cn='10',sec=s) }}">{{ s }}</a>{% endfor %}</div>
+          <div class="dropdown-heading" style="margin-top:11px">Higher Secondary</div>
+          {% for c,s in [('11','Science'),('11','Arts'),('12','Science'),('12','Arts')] %}<a href="{{ url_for('class_page',cn=c,sec=s) }}" style="padding:4px 11px;display:block;color:var(--text-light);font-size:.79rem">Class {{ c }} – {{ s }}</a>{% endfor %}
+        </div>
+      </div>
+    </li>
+    <li><a href="{{ url_for('gallery') }}" class="nav-link {% if request.endpoint=='gallery' %}active{% endif %}">Gallery</a></li>
+    <li><a href="{{ url_for('notices') }}" class="nav-link {% if request.endpoint=='notices' %}active{% endif %}">Notices</a></li>
+    <li><a href="{{ url_for('contact') }}" class="nav-link {% if request.endpoint=='contact' %}active{% endif %}">Contact</a></li>
+    <li><a href="{{ url_for('student_login') }}" class="nav-btn">Login</a></li>
+  </ul>
+</div></nav>
+
+{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}
+<div class="flash-wrap">{% for cat,msg in messages %}<div class="flash flash-{{ cat }}"><span>{{ msg }}</span><button onclick="this.parentElement.remove()">✕</button></div>{% endfor %}</div>
+{% endif %}{% endwith %}
+
+<main>{% block content %}{% endblock %}</main>
+
+<button class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<footer class="footer">
+  <div class="footer-wave"><svg viewBox="0 0 1440 50" preserveAspectRatio="none"><path d="M0,35 C360,65 1080,5 1440,35 L1440,50 L0,50 Z" fill="#070f1e"/></svg></div>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-col footer-brand">
+        {% if settings.school_logo %}<img src="{{ url_for('static',filename='images/'+settings.school_logo) }}" style="width:48px;height:48px;border-radius:50%;border:2px solid rgba(240,180,41,.3);margin-bottom:8px">{% endif %}
+        <h3>{{ settings.school_name }}</h3><p>{{ settings.tagline }}</p>
+        <p class="footer-affil">Affiliated to WBBSE &amp; WBCHSE · Govt. of West Bengal</p>
+      </div>
+      <div class="footer-col"><h4>Quick Links</h4><ul>
+        <li><a href="{{ url_for('index') }}">Home</a></li><li><a href="{{ url_for('about') }}">About School</a></li>
+        <li><a href="{{ url_for('academics') }}">Academics</a></li><li><a href="{{ url_for('notices') }}">Notices</a></li>
+        <li><a href="{{ url_for('results') }}">Check Results</a></li><li><a href="{{ url_for('gallery') }}">Gallery</a></li>
+        <li><a href="{{ url_for('facilities') }}">Facilities</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Student Portal</h4><ul>
+        <li><a href="{{ url_for('student_login') }}">Student Login</a></li><li><a href="{{ url_for('results') }}">Result Check</a></li>
+        {% for c,s in [('10','A'),('11','Science'),('12','Science')] %}<li><a href="{{ url_for('class_page',cn=c,sec=s) }}">Class {{ c }}</a></li>{% endfor %}
+      </ul></div>
+      <div class="footer-col"><h4>Contact Us</h4><address>
+        <p>📍 {{ settings.address }}</p><p>📞 {{ settings.phone }}</p><p>✉ {{ settings.email }}</p>
+      </address>
+      <div class="footer-timings"><span>🕐 School Hours</span><span>Mon–Sat: 10:00 AM – 4:00 PM</span></div></div>
+    </div>
+    <div class="footer-bottom"><p>© {{ now.year }} {{ settings.school_name }} · Government of West Bengal</p><p>Designed with ♥ for Education</p></div>
+  </div>
+</footer>
+<div class="lightbox" id="lb"><span class="lb-close" id="lbClose">✕</span><img id="lbImg" src="" alt=""/></div>
+<script src="{{ url_for('static',filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body></html>

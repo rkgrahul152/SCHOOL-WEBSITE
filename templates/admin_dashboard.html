@@ -1,0 +1,127 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block extra_css %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>{% endblock %}
+
+{% block admin_content %}
+<div class="admin-topbar-row">
+  <div>
+    <div class="admin-page-title">Admin Dashboard</div>
+    <div class="admin-page-sub">Welcome back, {{ session.admin_name }} · Manage your school portal</div>
+  </div>
+  <a href="{{ url_for('index') }}" target="_blank" class="btn-outline" style="padding:7px 16px;font-size:.8rem">🌐 View Site</a>
+</div>
+
+<!-- 6 STAT CARDS -->
+<div class="stat-cards-row" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
+  <div class="sc blue"><div class="sc-icon">🎓</div><div><div class="sc-val">{{ stats.students }}</div><div class="sc-lbl">Total Students</div></div></div>
+  <div class="sc green"><div class="sc-icon">👨‍🏫</div><div><div class="sc-val">{{ stats.teachers }}</div><div class="sc-lbl">Total Teachers</div></div></div>
+  <div class="sc orange"><div class="sc-icon">📢</div><div><div class="sc-val">{{ stats.notices }}</div><div class="sc-lbl">Total Notices</div></div></div>
+  <div class="sc purple"><div class="sc-icon">📋</div><div><div class="sc-val">{{ stats.results }}</div><div class="sc-lbl">Total Assignments</div></div></div>
+  <div class="sc teal"><div class="sc-icon">🖼️</div><div><div class="sc-val">{{ stats.gallery }}</div><div class="sc-lbl">Gallery Photos</div></div></div>
+  <div class="sc red" style="display:{% if stats.facilities > 0 %}flex{% else %}flex{% endif %}"><div class="sc-icon">🏫</div><div><div class="sc-val">{{ stats.facilities }}</div><div class="sc-lbl">Facilities</div></div></div>
+</div>
+
+<!-- CHARTS ROW -->
+<div class="grid-2" style="gap:16px;margin-bottom:18px">
+  <div class="admin-card">
+    <div class="admin-card-head">
+      <div class="admin-card-title">📈 Students Overview</div>
+      <span style="font-size:.72rem;color:var(--text-muted)">Jan – Jun 2025</span>
+    </div>
+    <div class="admin-card-body" style="padding:14px">
+      <div style="height:180px"><canvas id="studentLineChart"></canvas></div>
+    </div>
+  </div>
+  <div class="admin-card">
+    <div class="admin-card-head">
+      <div class="admin-card-title">📊 Notices Summary</div>
+      <span style="font-size:.72rem;color:var(--text-muted)">Total: {{ stats.notices }}</span>
+    </div>
+    <div class="admin-card-body" style="padding:14px;display:flex;align-items:center;justify-content:center">
+      <div style="height:160px;width:100%"><canvas id="noticesDonut"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="admin-card" style="margin-bottom:18px">
+  <div class="admin-card-head"><div class="admin-card-title">⚡ Quick Actions</div></div>
+  <div class="admin-card-body">
+    <div class="quick-actions-grid">
+      <a href="{{ url_for('admin_notices') }}" class="qa-btn qa1"><span class="qa-icon">📢</span><span class="qa-label">Add Notice</span></a>
+      <a href="{{ url_for('admin_results') }}" class="qa-btn qa2"><span class="qa-icon">📊</span><span class="qa-label">Upload Result</span></a>
+      <a href="{{ url_for('admin_assignments') }}" class="qa-btn qa3"><span class="qa-icon">📋</span><span class="qa-label">Add Assignment</span></a>
+      <a href="{{ url_for('admin_materials') }}" class="qa-btn qa4"><span class="qa-icon">📚</span><span class="qa-label">Upload Material</span></a>
+      <a href="{{ url_for('admin_events') }}" class="qa-btn qa5"><span class="qa-icon">📅</span><span class="qa-label">Add Event</span></a>
+      <a href="{{ url_for('admin_gallery') }}" class="qa-btn qa6"><span class="qa-icon">🖼️</span><span class="qa-label">Manage Gallery</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- RECENT NOTICES + RECENT ASSIGNMENTS -->
+<div class="grid-2" style="gap:16px;margin-bottom:18px">
+  <div class="admin-card">
+    <div class="admin-card-head">
+      <div class="admin-card-title">📢 Recent Notices</div>
+      <a href="{{ url_for('admin_notices') }}" class="admin-card-link">View All →</a>
+    </div>
+    <div class="admin-card-body" style="padding:0">
+      <table class="admin-table"><thead><tr><th>Title</th><th>Category</th><th>Date</th></tr></thead><tbody>
+        {% for n in recent_notices %}
+        <tr>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            {% if n.is_urgent %}<span class="badge badge-red" style="margin-right:4px;font-size:.62rem">URG</span>{% endif %}{{ n.title }}
+          </td>
+          <td><span class="badge badge-gold">{{ n.category }}</span></td>
+          <td style="font-size:.77rem;white-space:nowrap">{{ n.created_at[:10] if n.created_at else '—' }}</td>
+        </tr>{% else %}
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:24px">No notices yet.</td></tr>
+        {% endfor %}
+      </tbody></table>
+    </div>
+  </div>
+  <div class="admin-card">
+    <div class="admin-card-head">
+      <div class="admin-card-title">📋 Recent Assignments</div>
+      <a href="{{ url_for('admin_assignments') }}" class="admin-card-link">View All →</a>
+    </div>
+    <div class="admin-card-body" style="padding:0">
+      <table class="admin-table"><thead><tr><th>Title</th><th>Class</th><th>Due</th></tr></thead><tbody>
+        {% for n in recent_events %}
+        <tr>
+          <td style="font-weight:600">{{ n.title }}</td>
+          <td><span class="badge badge-blue">{{ n.event_type }}</span></td>
+          <td style="font-size:.77rem">{{ n.event_date }}</td>
+        </tr>{% else %}
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:24px">No data.</td></tr>
+        {% endfor %}
+      </tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- SCHOOL INFO CARD -->
+<div class="admin-card">
+  <div class="admin-card-head">
+    <div class="admin-card-title">🏫 School Information</div>
+    <a href="{{ url_for('admin_settings') }}" class="admin-card-link">Edit Settings →</a>
+  </div>
+  <div class="admin-card-body">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+      {% for lbl,val in [('School Name',settings.school_name),('Principal',settings.principal_name),('Phone',settings.phone),('Email',settings.email),('Address',settings.address),('Established',settings.established),('Affiliation','WBBSE & WBCHSE'),('Type','Government Aided')] %}
+      <div style="padding:11px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--rs)">
+        <div style="font-size:.66rem;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:3px">{{ lbl }}</div>
+        <div style="font-size:.82rem;color:var(--text-light)">{{ val }}</div>
+      </div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+window.addEventListener('load', function() {
+  initAdminCharts({{ stats.students }}, {{ stats.notices }});
+});
+</script>
+{% endblock %}
+{% endblock %}

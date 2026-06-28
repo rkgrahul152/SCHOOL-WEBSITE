@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% block title %}Academics – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="page-hero-content">
+  <div class="breadcrumb"><a href="/">Home</a><span>›</span><span>Academics</span></div>
+  <h1>Academic <span style="color:var(--accent)">Structure</span></h1>
+  <p>Class 5 to Class 12 — Sections, Streams & Curriculum</p>
+</div></div>
+<section class="section"><div class="container">
+  <div class="section-header reveal"><span class="section-label">Primary & Junior</span><h2 class="section-title">Classes <span>V – IX</span></h2><div class="divider"></div><p class="section-desc">Four sections (A,B,C,D) · WBBSE</p></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px" class="reveal">
+    {% for c in ['5','6','7','8','9'] %}
+    <div class="glass-card" style="padding:20px">
+      <div style="font-family:var(--fd);font-size:1.45rem;color:var(--accent);margin-bottom:10px">Class {{ c }}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">{% for s in ['A','B','C','D'] %}<a href="{{ url_for('class_page',cn=c,sec=s) }}" class="badge badge-gold" style="padding:4px 11px;font-size:.78rem">Sec {{ s }}</a>{% endfor %}</div>
+    </div>{% endfor %}
+  </div>
+  <div class="section-header reveal mt-28"><span class="section-label">Secondary</span><h2 class="section-title">Class <span>X</span></h2><div class="divider"></div><p class="section-desc">Three sections · Madhyamik · WBBSE</p></div>
+  <div class="grid-3 reveal">{% for s in ['A','B','C'] %}<a href="{{ url_for('class_page',cn='10',sec=s) }}" class="glass-card" style="padding:26px;text-align:center"><div style="font-size:1.8rem;margin-bottom:8px">📘</div><div style="font-family:var(--fd);color:var(--white)">Class 10 – Section {{ s }}</div><div style="font-size:.78rem;color:var(--text-muted);margin-top:6px">Madhyamik · All Subjects</div></a>{% endfor %}</div>
+  <div class="section-header reveal mt-28"><span class="section-label">Higher Secondary</span><h2 class="section-title">Classes <span>XI & XII</span></h2><div class="divider"></div><p class="section-desc">Science & Arts · WBCHSE</p></div>
+  <div class="grid-2 reveal" style="gap:16px">
+    {% for c in ['11','12'] %}{% for stream,icon,desc in [('Science','🔬','Physics · Chemistry · Maths · Biology'),('Arts','🎨','Bengali · English · History · Geography')] %}
+    <a href="{{ url_for('class_page',cn=c,sec=stream) }}" class="glass-card" style="padding:26px">
+      <div style="font-size:2.2rem;margin-bottom:10px">{{ icon }}</div>
+      <div style="font-family:var(--fd);color:var(--white);font-size:1.05rem;margin-bottom:4px">Class {{ c }} – {{ stream }}</div>
+      <div style="font-size:.79rem;color:var(--text-muted)">{{ desc }}</div>
+      <div class="badge badge-green" style="margin-top:11px">View Subjects →</div>
+    </a>{% endfor %}{% endfor %}
+  </div>
+</div></section>{% endblock %}

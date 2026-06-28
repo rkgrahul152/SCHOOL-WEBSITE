@@ -1,0 +1,19 @@
+{% extends "admin_base.html" %}{% block title %}Events{% endblock %}
+{% block admin_content %}
+<div class="admin-topbar-row"><div><div class="admin-page-title">📅 Manage Events</div><div class="admin-page-sub">Schedule school events and activities</div></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">➕ Add Event</div></div>
+  <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_add_event') }}">
+    <div class="form-grid">
+      <div class="form-group"><label>Title *</label><input type="text" name="title" class="form-control" placeholder="e.g. Annual Sports Day" required></div>
+      <div class="form-group"><label>Type</label><select name="event_type" class="form-control"><option>General</option><option>Sports</option><option>Academic</option><option>Cultural</option><option>Meeting</option><option>Holiday</option><option>Examination</option></select></div>
+      <div class="form-group"><label>Date *</label><input type="date" name="event_date" class="form-control" required></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Description</label><textarea name="description" class="form-control" rows="2" placeholder="Event details..."></textarea></div>
+    </div>
+    <div style="margin-top:13px"><button type="submit" class="btn-gold">📅 Add Event</button></div>
+  </form></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">📅 All Events ({{ events|length }})</div></div>
+  <div class="admin-card-body" style="padding:0"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>#</th><th>Title</th><th>Type</th><th>Date</th><th>Description</th><th></th></tr></thead><tbody>
+    {% for ev in events %}<tr><td>{{ loop.index }}</td><td style="font-weight:600;color:var(--white)">{{ ev.title }}</td><td><span class="badge badge-blue">{{ ev.event_type }}</span></td><td><span class="badge badge-gold">{{ ev.event_date }}</span></td><td style="font-size:.79rem;color:var(--text-muted)">{{ (ev.description or '')[:55] }}{% if ev.description and ev.description|length>55 %}...{% endif %}</td>
+    <td><a href="{{ url_for('admin_delete_event',i=ev.id) }}" class="btn-danger" onclick="return confirm('Delete?')">🗑</a></td></tr>
+    {% else %}<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">No events yet.</td></tr>{% endfor %}
+  </tbody></table></div></div></div>{% endblock %}

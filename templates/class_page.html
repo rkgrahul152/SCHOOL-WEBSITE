@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% block title %}Class {{ class_name }} {{ section }} – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="page-hero-content">
+  <div class="breadcrumb"><a href="/">Home</a><span>›</span><a href="{{ url_for('academics') }}">Academics</a><span>›</span><span>Class {{ class_name }} – {{ section }}</span></div>
+  <h1>Class <span style="color:var(--accent)">{{ class_name }}</span> — {{ section }}</h1>
+  <p>Timetable · Assignments · Study Materials</p>
+</div></div>
+<section class="section"><div class="container">
+  <div class="class-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:12px">
+    <div class="ctab active" data-tab="t-tt">📅 Timetable</div>
+    <div class="ctab" data-tab="t-asn">📋 Assignments</div>
+    <div class="ctab" data-tab="t-mat">📚 Study Materials</div>
+  </div>
+  <div class="tab-pane active" id="t-tt">
+    {% if routines %}{% set days=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] %}{% set periods=routines|map(attribute='period')|list|unique|sort|list %}
+    <div style="overflow-x:auto"><table class="result-table" style="min-width:580px">
+      <thead><tr><th>Day</th>{% for p in periods %}<th>Period {{ p }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for day in days %}<tr><td style="font-weight:700;color:var(--accent)">{{ day[:3] }}</td>
+        {% for p in periods %}{% set cell=routines|selectattr('day','equalto',day)|selectattr('period','equalto',p)|first %}
+        <td>{% if cell %}<div style="font-weight:600;font-size:.8rem">{{ cell.subject }}</div>{% if cell.time_slot %}<div style="font-size:.67rem;color:var(--text-muted)">{{ cell.time_slot }}</div>{% endif %}{% if cell.teacher %}<div style="font-size:.67rem;color:var(--accent)">{{ cell.teacher }}</div>{% endif %}{% else %}<span style="color:rgba(255,255,255,.2)">—</span>{% endif %}</td>{% endfor %}
+      </tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="glass-card" style="padding:40px;text-align:center"><div style="font-size:2.5rem;margin-bottom:12px">📅</div><p style="color:var(--text-muted)">Timetable not yet published.</p></div>{% endif %}
+  </div>
+  <div class="tab-pane" id="t-asn">
+    {% if assignments %}<div style="display:flex;flex-direction:column;gap:10px">
+      {% for a in assignments %}<div class="glass-card" style="padding:16px 20px"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div><div style="font-weight:700;color:var(--white)">{{ a.title }}</div><div style="font-size:.77rem;color:var(--accent);margin-top:2px">{{ a.subject }}</div>{% if a.description %}<div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">{{ a.description }}</div>{% endif %}</div>
+        <div>{% if a.due_date %}<span class="badge badge-red">📅 Due: {{ a.due_date }}</span>{% endif %}{% if a.file_path %}<br><a href="{{ url_for('static',filename='images/'+a.file_path) }}" class="badge badge-blue" style="margin-top:5px;display:inline-block" download>⬇ Download</a>{% endif %}</div>
+      </div></div>{% endfor %}
+    </div>{% else %}<div class="glass-card" style="padding:40px;text-align:center"><p style="color:var(--text-muted)">No assignments posted yet.</p></div>{% endif %}
+  </div>
+  <div class="tab-pane" id="t-mat">
+    {% if materials %}<div class="grid-3" style="gap:14px">
+      {% for m in materials %}<div class="glass-card" style="padding:18px"><div style="font-size:1.7rem;margin-bottom:8px">📄</div>
+        <div style="font-weight:700;color:var(--white);margin-bottom:2px">{{ m.title }}</div>
+        <div style="font-size:.74rem;color:var(--accent);margin-bottom:7px">{{ m.subject }}</div>
+        {% if m.file_path %}<a href="{{ url_for('static',filename='images/'+m.file_path) }}" class="btn-outline" style="font-size:.74rem;padding:4px 12px" download>⬇ Download PDF</a>{% endif %}
+      </div>{% endfor %}
+    </div>{% else %}<div class="glass-card" style="padding:40px;text-align:center"><p style="color:var(--text-muted)">No materials uploaded yet.</p></div>{% endif %}
+  </div>
+</div></section>{% endblock %}

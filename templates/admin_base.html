@@ -1,0 +1,67 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>{% block title %}Admin{% endblock %} – {{ settings.school_name }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+{% block extra_css %}{% endblock %}
+</head><body>
+{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}
+<div class="flash-wrap">{% for cat,msg in messages %}<div class="flash flash-{{ cat }}"><span>{{ msg }}</span><button onclick="this.parentElement.remove()">✕</button></div>{% endfor %}</div>
+{% endif %}{% endwith %}
+
+<div class="admin-wrap">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-sb-head">
+      <div class="admin-sb-logo">
+        {% if settings.school_logo %}<img src="{{ url_for('static',filename='images/'+settings.school_logo) }}" alt="logo">
+        {% else %}<svg viewBox="0 0 40 40" fill="none" width="30" height="30"><circle cx="20" cy="20" r="18" fill="rgba(240,180,41,.12)" stroke="#f0b429" stroke-width="1.5"/><path d="M20 6 L24 14 L34 14 L26 20 L29 30 L20 24 L11 30 L14 20 L6 14 L16 14 Z" fill="#f0b429"/></svg>{% endif %}
+        <div><div class="admin-sb-title">Admin Panel</div><div class="admin-sb-sub">{{ settings.school_name[:20] }}</div></div>
+      </div>
+      <div class="admin-user">
+        <div class="admin-avatar">A</div>
+        <div><div class="admin-user-name">{{ session.admin_name }}</div><div class="admin-user-role">Administrator</div></div>
+      </div>
+    </div>
+    <nav class="admin-nav">
+      <div class="admin-nav-grp"><div class="admin-nav-grp-title">Overview</div>
+        <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item {% if request.endpoint=='admin_dashboard' %}active{% endif %}"><span class="icon">🏠</span> Dashboard</a>
+      </div>
+      <div class="admin-nav-grp"><div class="admin-nav-grp-title">Manage</div>
+        <a href="{{ url_for('admin_notices') }}" class="admin-nav-item {% if request.endpoint=='admin_notices' %}active{% endif %}"><span class="icon">📢</span> Manage Notices</a>
+        <a href="{{ url_for('admin_results') }}" class="admin-nav-item {% if request.endpoint=='admin_results' %}active{% endif %}"><span class="icon">📊</span> Manage Results</a>
+        <a href="{{ url_for('admin_assignments') }}" class="admin-nav-item {% if request.endpoint=='admin_assignments' %}active{% endif %}"><span class="icon">📋</span> Manage Assignments</a>
+        <a href="{{ url_for('admin_materials') }}" class="admin-nav-item {% if request.endpoint=='admin_materials' %}active{% endif %}"><span class="icon">📚</span> Study Materials</a>
+        <a href="{{ url_for('admin_gallery') }}" class="admin-nav-item {% if request.endpoint=='admin_gallery' %}active{% endif %}"><span class="icon">🖼️</span> Gallery Management</a>
+        <a href="{{ url_for('admin_facilities') }}" class="admin-nav-item {% if request.endpoint=='admin_facilities' %}active{% endif %}"><span class="icon">🏫</span> Facilities</a>
+        <a href="{{ url_for('admin_routines') }}" class="admin-nav-item {% if request.endpoint=='admin_routines' %}active{% endif %}"><span class="icon">🕐</span> Routine Management</a>
+        <a href="{{ url_for('admin_teachers') }}" class="admin-nav-item {% if request.endpoint=='admin_teachers' %}active{% endif %}"><span class="icon">👨‍🏫</span> Teacher Management</a>
+        <a href="{{ url_for('admin_students') }}" class="admin-nav-item {% if request.endpoint=='admin_students' %}active{% endif %}"><span class="icon">🎓</span> Student Management</a>
+        <a href="{{ url_for('admin_attendance') }}" class="admin-nav-item {% if request.endpoint=='admin_attendance' %}active{% endif %}"><span class="icon">✅</span> Attendance</a>
+        <a href="{{ url_for('admin_events') }}" class="admin-nav-item {% if request.endpoint=='admin_events' %}active{% endif %}"><span class="icon">📅</span> Events</a>
+      </div>
+      <div class="admin-nav-grp"><div class="admin-nav-grp-title">System</div>
+        <a href="{{ url_for('admin_settings') }}" class="admin-nav-item {% if request.endpoint=='admin_settings' %}active{% endif %}"><span class="icon">🏅</span> Logo &amp; Images</a>
+        <a href="{{ url_for('admin_settings') }}" class="admin-nav-item {% if request.endpoint=='admin_settings' %}active{% endif %}"><span class="icon">⚙️</span> Site Settings</a>
+        <a href="{{ url_for('index') }}" class="admin-nav-item" target="_blank"><span class="icon">🌐</span> View Website</a>
+      </div>
+    </nav>
+    <div class="admin-sb-footer">
+      <a href="{{ url_for('admin_logout') }}" style="display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:var(--rs);color:#fca5a5;font-size:.81rem;font-weight:600;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.14)">🚪 Logout</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button id="adminToggle" style="display:none;padding:6px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--accent);border-radius:var(--rs);font-weight:700;font-family:var(--fb)">☰ Menu</button>
+      <div style="margin-left:auto;font-size:.78rem;color:var(--text-muted)" id="currentDate"></div>
+    </div>
+    {% block admin_content %}{% endblock %}
+  </main>
+</div>
+
+{% raw %}<style>@media(max-width:768px){#adminToggle{display:block!important}}</style>{% endraw %}
+<script src="{{ url_for('static',filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body></html>

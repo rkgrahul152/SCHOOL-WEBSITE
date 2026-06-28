@@ -1,0 +1,245 @@
+{% extends "admin_base.html" %}
+{% block title %}Settings & Customization{% endblock %}
+{% block admin_content %}
+<div class="admin-topbar-row">
+  <div>
+    <div class="admin-page-title">⚙️ Website Settings & Customization</div>
+    <div class="admin-page-sub">Control every aspect of the website — logo, hero, principal, stats, social links and more</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+  SECTION 1: SCHOOL LOGO
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head">
+    <div class="admin-card-title">🏅 School Logo</div>
+    <span style="font-size:.72rem;color:var(--text-muted)">Appears in Navbar · Footer · Hero · Result Cards · Preloader</span>
+  </div>
+  <div class="admin-card-body">
+    <div style="display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+      <div style="text-align:center">
+        <div style="width:100px;height:100px;border-radius:50%;border:3px solid var(--accent);overflow:hidden;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+          {% if settings.school_logo %}
+            <img src="{{ url_for('static',filename='images/'+settings.school_logo) }}" style="width:100%;height:100%;object-fit:contain">
+          {% else %}<svg viewBox="0 0 60 60" fill="none" width="55" height="55"><circle cx="30" cy="30" r="28" fill="rgba(240,180,41,.1)" stroke="#f0b429" stroke-width="1.5"/><path d="M30 8 L37 22 L53 22 L40 32 L45 47 L30 38 L15 47 L20 32 L7 22 L23 22 Z" fill="#f0b429"/></svg>{% endif %}
+        </div>
+        <div style="font-size:.7rem;color:var(--text-muted)">{{ 'Custom Logo' if settings.school_logo else 'Default SVG' }}</div>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <form method="POST" action="{{ url_for('admin_upload_logo') }}" enctype="multipart/form-data" style="margin-bottom:12px">
+          <div class="form-group" style="margin-bottom:10px"><label>Upload Logo (PNG/JPG/GIF — circular display)</label><input type="file" name="logo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.webp" required></div>
+          <button type="submit" class="btn-gold">📤 Upload School Logo</button>
+        </form>
+        {% if settings.school_logo %}<a href="{{ url_for('admin_remove_logo') }}" class="btn-danger" style="display:inline-block" onclick="return confirm('Remove logo?')">🗑 Remove Logo</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+  SECTION 2: HERO / SCHOOL BUILDING IMAGE
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head">
+    <div class="admin-card-title">🏫 Hero Background / School Building Image</div>
+    <span style="font-size:.72rem;color:var(--text-muted)">Appears as background of the Homepage Hero section</span>
+  </div>
+  <div class="admin-card-body">
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div style="width:240px;height:120px;border-radius:var(--rs);overflow:hidden;border:2px solid rgba(240,180,41,.2);background:var(--navy-mid);flex-shrink:0;position:relative">
+        {% if settings.hero_image %}
+          <img src="{{ url_for('static',filename='images/'+settings.hero_image) }}" style="width:100%;height:100%;object-fit:cover">
+          <div style="position:absolute;bottom:6px;left:6px;background:rgba(16,185,129,.8);color:white;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:3px">✅ Custom Image Set</div>
+        {% else %}
+          <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--text-muted)">
+            <span style="font-size:2rem">🏫</span>
+            <span style="font-size:.7rem">Default gradient background</span>
+          </div>
+        {% endif %}
+      </div>
+      <div style="flex:1;min-width:220px">
+        <form method="POST" action="{{ url_for('admin_upload_hero') }}" enctype="multipart/form-data" style="margin-bottom:12px">
+          <div class="form-group" style="margin-bottom:10px">
+            <label>Upload School Building Photo (JPG/PNG — recommended: 1920×1080px wide)</label>
+            <input type="file" name="hero_image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" required>
+          </div>
+          <button type="submit" class="btn-gold">🏫 Upload Hero Image</button>
+        </form>
+        {% if settings.hero_image %}<a href="{{ url_for('admin_remove_hero') }}" class="btn-danger" style="display:inline-block" onclick="return confirm('Remove hero image?')">🗑 Remove Image</a>{% endif %}
+        <div style="margin-top:10px;font-size:.73rem;color:var(--text-muted)">💡 Upload a wide photo of your school building for the best hero section appearance.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+  SECTION 3: PRINCIPAL PHOTO
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head">
+    <div class="admin-card-title">👨‍💼 Principal / Headmaster Photo</div>
+    <span style="font-size:.72rem;color:var(--text-muted)">Appears in Homepage Principal's Message section</span>
+  </div>
+  <div class="admin-card-body">
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div style="width:90px;height:90px;border-radius:50%;border:3px solid var(--accent);overflow:hidden;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:1.8rem;color:var(--accent);flex-shrink:0">
+        {% if settings.principal_photo %}<img src="{{ url_for('static',filename='images/'+settings.principal_photo) }}" style="width:100%;height:100%;object-fit:cover">
+        {% else %}{{ settings.principal_name[0] if settings.principal_name else 'P' }}{% endif %}
+      </div>
+      <div style="flex:1;min-width:220px">
+        <form method="POST" action="{{ url_for('admin_upload_principal') }}" enctype="multipart/form-data" style="margin-bottom:12px">
+          <div class="form-group" style="margin-bottom:10px"><label>Upload Principal Photo (JPG/PNG — square crop recommended)</label><input type="file" name="principal_photo" class="form-control" accept=".jpg,.jpeg,.png,.webp" required></div>
+          <button type="submit" class="btn-gold">📸 Upload Principal Photo</button>
+        </form>
+        {% if settings.principal_photo %}<a href="{{ url_for('admin_remove_principal') }}" class="btn-danger" style="display:inline-block" onclick="return confirm('Remove photo?')">🗑 Remove Photo</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+  SECTION 4: SCHOOL INFORMATION
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head"><div class="admin-card-title">🏫 School Information & Contact</div></div>
+  <div class="admin-card-body">
+    <form method="POST" action="{{ url_for('admin_save_settings') }}">
+      <div class="form-grid">
+        <div class="form-group"><label>School Name</label><input type="text" name="school_name" class="form-control" value="{{ settings.school_name }}"></div>
+        <div class="form-group"><label>School Type</label><input type="text" name="school_type" class="form-control" value="{{ settings.school_type or 'Government High School' }}"></div>
+        <div class="form-group"><label>Tagline / Motto</label><input type="text" name="tagline" class="form-control" value="{{ settings.tagline }}"></div>
+        <div class="form-group"><label>Hero Badge Text</label><input type="text" name="hero_badge_text" class="form-control" value="{{ settings.hero_badge_text or '' }}"></div>
+        <div class="form-group"><label>Hero Subtitle</label><input type="text" name="hero_subtitle" class="form-control" value="{{ settings.hero_subtitle }}"></div>
+        <div class="form-group"><label>Year Established</label><input type="text" name="established" class="form-control" value="{{ settings.established }}"></div>
+        <div class="form-group"><label>Affiliation</label><input type="text" name="affiliation" class="form-control" value="{{ settings.affiliation or 'WBBSE & WBCHSE' }}"></div>
+        <div class="form-group"><label>Principal Name</label><input type="text" name="principal_name" class="form-control" value="{{ settings.principal_name }}"></div>
+        <div class="form-group"><label>Contact Phone</label><input type="text" name="phone" class="form-control" value="{{ settings.phone }}"></div>
+        <div class="form-group"><label>Contact Email</label><input type="email" name="email" class="form-control" value="{{ settings.email }}"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Full Address</label><input type="text" name="address" class="form-control" value="{{ settings.address }}"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Principal's Message (shown on homepage)</label><textarea name="principal_message" class="form-control" rows="4">{{ settings.principal_message }}</textarea></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Footer About Text</label><textarea name="footer_about" class="form-control" rows="2">{{ settings.footer_about or '' }}</textarea></div>
+      </div>
+      <div style="margin-top:16px"><button type="submit" class="btn-gold" style="padding:10px 26px">💾 Save School Information</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+  SECTION 5: HOMEPAGE HERO STATS
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head">
+    <div class="admin-card-title">📊 Homepage Hero Stats (4 numbers below hero text)</div>
+  </div>
+  <div class="admin-card-body">
+    <form method="POST" action="{{ url_for('admin_save_settings') }}">
+      <div class="form-grid">
+        {% for i in ['1','2','3','4'] %}
+        <div class="form-group"><label>Stat {{ i }} — Value</label><input type="text" name="stat{{ i }}_val" class="form-control" value="{{ settings.get('stat'+i+'_val','') }}"></div>
+        <div class="form-group"><label>Stat {{ i }} — Label</label><input type="text" name="stat{{ i }}_label" class="form-control" value="{{ settings.get('stat'+i+'_label','') }}"></div>
+        {% endfor %}
+      </div>
+      <div style="margin-top:14px"><button type="submit" class="btn-gold">💾 Save Stats</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+  SECTION 6: ACHIEVEMENTS SECTION
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head">
+    <div class="admin-card-title">🏆 Achievements Section (4 achievement cards)</div>
+  </div>
+  <div class="admin-card-body">
+    <form method="POST" action="{{ url_for('admin_save_settings') }}">
+      <div class="form-grid">
+        {% for i in ['1','2','3','4'] %}
+        <div class="form-group"><label>Achievement {{ i }} — Value</label><input type="text" name="ach{{ i }}_val" class="form-control" value="{{ settings.get('ach'+i+'_val','') }}" placeholder="e.g. 98%"></div>
+        <div class="form-group"><label>Achievement {{ i }} — Label</label><input type="text" name="ach{{ i }}_label" class="form-control" value="{{ settings.get('ach'+i+'_label','') }}" placeholder="e.g. Pass Percentage"></div>
+        {% endfor %}
+      </div>
+      <div style="margin-top:14px"><button type="submit" class="btn-gold">💾 Save Achievements</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+  SECTION 7: HOMEPAGE VISIBILITY TOGGLES
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head">
+    <div class="admin-card-title">👁️ Homepage Section Visibility</div>
+    <span style="font-size:.72rem;color:var(--text-muted)">Show or hide sections on the public homepage</span>
+  </div>
+  <div class="admin-card-body">
+    <form method="POST" action="{{ url_for('admin_save_settings') }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        {% for key,label,icon in [
+          ('homepage_show_achievements','Achievements Section','🏆'),
+          ('homepage_show_facilities','Facilities Section','🏫'),
+          ('homepage_show_gallery','Gallery Preview','🖼️'),
+          ('homepage_show_teachers','Teachers Preview','👨‍🏫'),
+        ] %}
+        <label style="display:flex;align-items:center;gap:10px;padding:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--rs);cursor:pointer">
+          <input type="checkbox" name="{{ key }}" value="1" {% if settings.get(key,'1')=='1' %}checked{% endif %} style="accent-color:var(--accent);width:16px;height:16px">
+          <span style="font-size:.88rem;color:var(--text-light)">{{ icon }} {{ label }}</span>
+        </label>{% endfor %}
+      </div>
+      <div style="margin-top:14px"><button type="submit" class="btn-gold">💾 Save Visibility</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+  SECTION 8: SOCIAL LINKS & WHATSAPP
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head"><div class="admin-card-title">🔗 Social Links & WhatsApp</div></div>
+  <div class="admin-card-body">
+    <form method="POST" action="{{ url_for('admin_save_settings') }}">
+      <div class="form-grid">
+        <div class="form-group"><label>📘 Facebook URL</label><input type="url" name="facebook_url" class="form-control" value="{{ settings.facebook_url or '' }}" placeholder="https://facebook.com/yourpage"></div>
+        <div class="form-group"><label>📺 YouTube URL</label><input type="url" name="youtube_url" class="form-control" value="{{ settings.youtube_url or '' }}" placeholder="https://youtube.com/yourchannel"></div>
+        <div class="form-group"><label>💬 WhatsApp Number</label><input type="text" name="whatsapp_number" class="form-control" value="{{ settings.whatsapp_number or '' }}" placeholder="91XXXXXXXXXX"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>🗺️ Google Maps Embed URL (for Contact page)</label><input type="text" name="contact_map_embed" class="form-control" value="{{ settings.contact_map_embed or '' }}" placeholder="https://maps.google.com/maps?q=..."></div>
+      </div>
+      <div style="margin-top:14px"><button type="submit" class="btn-gold">💾 Save Social Links</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+  SECTION 9: QUICK REFERENCE
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head"><div class="admin-card-title">📋 What Each Admin Section Controls</div></div>
+  <div class="admin-card-body">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+      {% for icon,title,desc in [
+        ('🏅','School Logo','Navbar · Footer · Preloader · Result card · Admin sidebar'),
+        ('🏫','Hero Image','Homepage background — upload school building photo'),
+        ('👨‍💼','Principal Photo','Homepage principal message section'),
+        ('📢','Notices','Homepage ticker + Notices page'),
+        ('📅','Events','Homepage upcoming events column'),
+        ('🖼️','Gallery','Gallery page photos by category'),
+        ('🏫','Facilities','Facilities page with photos & feature tags'),
+        ('👨‍🏫','Teachers','About page and Homepage teacher preview'),
+        ('🎓','Students','Student portal login credentials'),
+        ('📊','Results','Result lookup by Class+Section+Roll'),
+        ('📋','Assignments','Student dashboard homework section'),
+        ('📚','Materials','Student dashboard study materials'),
+        ('🕐','Timetables','Class page & student dashboard routine'),
+        ('✅','Attendance','Student dashboard attendance records'),
+        ('⚙️','Settings','This page — all text & images'),
+      ] %}
+      <div style="padding:11px 13px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--rs)">
+        <div style="font-weight:700;color:var(--white);font-size:.84rem;margin-bottom:3px">{{ icon }} {{ title }}</div>
+        <div style="font-size:.72rem;color:var(--text-muted)">{{ desc }}</div>
+      </div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

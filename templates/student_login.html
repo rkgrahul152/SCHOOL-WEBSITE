@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Student Login – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      {% if settings.school_logo %}<img src="{{ url_for('static',filename='images/'+settings.school_logo) }}" alt="logo" style="width:64px;height:64px;border-radius:50%;border:2px solid rgba(240,180,41,.4)">
+      {% else %}<svg viewBox="0 0 80 80" fill="none" width="64" height="64"><circle cx="40" cy="40" r="38" fill="rgba(240,180,41,.08)" stroke="#f0b429" stroke-width="1.5"/><path d="M40 12 L48 28 L66 28 L52 38 L58 54 L40 44 L22 54 L28 38 L14 28 L32 28 Z" fill="#f0b429"/></svg>{% endif %}
+    </div>
+    <div style="text-align:center;margin-bottom:20px">
+      <div class="login-title">Student Login</div>
+      <div class="login-sub">{{ settings.school_name }}</div>
+    </div>
+    <div class="login-divider"></div>
+    <form method="POST" style="display:flex;flex-direction:column;gap:12px">
+      <div class="form-group"><label>Class *</label>
+        <select name="class" class="form-control" required id="lClass" onchange="updateSections('lClass','lSection',this.value)">
+          <option value="">— Select Class —</option>
+          {% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}">Class {{ c }}</option>{% endfor %}
+        </select></div>
+      <div class="form-group"><label>Section / Stream *</label>
+        <select name="section" class="form-control" required id="lSection"><option value="">— Select Section —</option></select></div>
+      <div class="form-group"><label>Roll Number *</label>
+        <input type="number" name="roll_number" class="form-control" placeholder="e.g. 1, 5, 23" min="1" required></div>
+      <div class="form-group"><label>Password</label>
+        <input type="password" name="password" class="form-control" placeholder="Your password" required></div>
+      <button type="submit" class="btn-gold" style="padding:11px;font-size:.92rem;margin-top:4px">🎓 Login</button>
+    </form>
+    <div style="text-align:center;margin-top:14px;font-size:.75rem;color:var(--text-muted)">Contact school office for credentials.</div>
+    <div style="text-align:center;margin-top:8px"><a href="{{ url_for('index') }}" style="font-size:.79rem;color:var(--accent)">← Back to Home</a></div>
+    <div style="margin-top:14px;padding:10px 12px;background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.18);border-radius:var(--rs);font-size:.72rem;color:var(--text-muted)">
+      <strong style="color:var(--accent)">Demo:</strong> Class <code style="color:var(--white)">10</code> · Sec <code style="color:var(--white)">A</code> · Roll <code style="color:var(--white)">1</code> · Pass: <code style="color:var(--white)">student123</code>
+    </div>
+  </div>
+</div>{% endblock %}

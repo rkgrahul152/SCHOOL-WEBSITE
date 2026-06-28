@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% block title %}{{ settings.school_name }} – Home{% endblock %}
+{% block content %}
+
+<!-- ═══ HERO ═══════════════════════════════════════════════════════ -->
+<section class="hero" id="home">
+  <!-- Dynamic hero background: uploaded image OR default gradient -->
+  {% if settings.hero_image %}
+  <div style="position:absolute;inset:0;z-index:0">
+    <img src="{{ url_for('static',filename='images/'+settings.hero_image) }}" alt="School Building"
+         style="width:100%;height:100%;object-fit:cover">
+    <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(7,15,30,.97) 40%,rgba(7,15,30,.55) 100%)"></div>
+  </div>
+  {% else %}
+  <div class="hero-bg-img"></div>
+  {% endif %}
+  <div class="hero-grid"></div>
+  <div class="hero-particles"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">⭐ {{ settings.hero_badge_text or 'Government Aided High School · West Bengal' }}</div>
+
+    <div class="hero-logo-wrap">
+      <div class="hero-logo-img">
+        {% if settings.school_logo %}
+          <img src="{{ url_for('static',filename='images/'+settings.school_logo) }}" alt="Logo">
+        {% else %}
+          <svg viewBox="0 0 100 100" fill="none" width="88" height="88">
+            <circle cx="50" cy="50" r="46" fill="rgba(240,180,41,.1)" stroke="#f0b429" stroke-width="2"/>
+            <path d="M50 14 L60 34 L82 34 L66 46 L72 66 L50 54 L28 66 L34 46 L18 34 L40 34 Z" fill="#f0b429"/>
+          </svg>
+        {% endif %}
+      </div>
+      <div>
+        <div class="hero-school-name">
+          <span>{{ settings.school_name.split()[0] if settings.school_name else 'Pundibari' }}</span>
+          {{ settings.school_name.split()[1:] | join(' ') if settings.school_name and settings.school_name.split()|length > 1 else '' }}
+        </div>
+        <div class="hero-type">{{ settings.school_type or 'Government High School' }}</div>
+      </div>
+    </div>
+
+    <p class="hero-tagline">{{ settings.tagline }}</p>
+
+    <div class="hero-actions">
+      <a href="{{ url_for('about') }}" class="btn-primary">Explore More</a>
+      <a href="{{ url_for('student_login') }}" class="btn-outline">School Dashboard</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ NOTICE TICKER ══════════════════════════════════════════════ -->
+{% if notices %}
+<div class="ticker">
+  <div class="ticker-label">📢 LATEST</div>
+  <div class="ticker-wrap"><div class="ticker-track">
+    {% for n in notices %}{% for _ in range(2) %}
+    <div class="ticker-item {% if n.is_urgent %}urg{% endif %}">
+      <div class="ticker-dot"></div>{{ n.title }}{% if n.is_urgent %} ⚠️{% endif %}
+    </div>{% endfor %}{% endfor %}
+  </div></div>
+</div>{% endif %}
+
+<!-- ═══ QUICK ACCESS STRIP ═════════════════════════════════════════ -->
+<div class="quick-strip">
+  <div class="quick-strip-inner">
+    {% for icon,label,sub,url in [
+      ('📊','Results','Check Results','/results'),
+      ('📅','Attendance','View Attendance','/student/login'),
+      ('📋','Homework','View Assignments','/student/login'),
+      ('📚','Study Materials','Notes & PDFs','/student/login'),
+      ('🕐','Class Routine','View Timetable','/student/login'),
+      ('🖼️','Gallery','Photo Gallery','/gallery'),
+      ('📢','Notices','Latest Notices','/notices'),
+    ] %}
+    <a href="{{ url }}" class="qs-item">
+      <span class="qs-icon">{{ icon }}</span>
+      <span class="qs-label">{{ label }}</span>
+      <span class="qs-sub">{{ sub }}</span>
+    </a>{% endfor %}
+  </div>
+</div>
+
+<!-- ═══ PRINCIPAL + NOTICES + EVENTS ══════════════════════════════ -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="principal-grid">
+
+      <!-- Principal Message -->
+      <div class="glass-card principal-card-main reveal">
+        <div style="font-family:var(--fd);font-size:.78rem;color:var(--accent);margin-bottom:14px;text-transform:uppercase;letter-spacing:1px">Principal's Message</div>
+        <div class="principal-photo-wrap">
+          <div class="principal-photo">
+            {% if settings.principal_photo %}
+              <img src="{{ url_for('static',filename='images/'+settings.principal_photo) }}" alt="{{ settings.principal_name }}">
+            {% else %}
+              {{ settings.principal_name[0] if settings.principal_name else 'P' }}
+            {% endif %}
+          </div>
+          <div>
+            <div class="principal-card-title">{{ settings.principal_name }}</div>
+            <div class="principal-card-role">Headmaster · {{ settings.school_name }}</div>
+          </div>
+        </div>
+        <p class="principal-msg-text">"{{ settings.principal_message[:220] }}{% if settings.principal_message|length > 220 %}...{% endif %}"</p>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)">
+          <div class="principal-sig-name">— {{ settings.principal_name }}</div>
+          <div class="principal-sig-title">Headmaster</div>
+        </div>
+      </div>
+
+      <!-- Latest Notices -->
+      <div class="glass-card reveal d1" style="padding:22px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <span style="font-family:var(--fd);font-size:.88rem;color:var(--white)">{{ settings.notice_board_title or 'Latest Notices' }}</span>
+          <a href="{{ url_for('notices') }}" style="font-size:.72rem;color:var(--accent);font-weight:600">View All →</a>
+        </div>
+        {% for n in notices %}
+        {% set parts = n.created_at[:10].split('-') if n.created_at else ['','',''] %}
+        {% set months = {'01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec'} %}
+        <div class="notice-item">
+          <div class="notice-date-box">
+            <div class="n-day">{{ parts[2] if parts|length>2 else '—' }}</div>
+            <div class="n-mon">{{ months.get(parts[1],'') if parts|length>1 else '' }}</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div class="notice-title">{{ n.title }}{% if n.is_urgent %}<span class="n-badge urgent">Urgent</span>{% endif %}</div>
+            <div class="notice-cat">{{ n.category }}</div>
+          </div>
+        </div>{% endfor %}
+        {% if not notices %}<p style="color:var(--text-muted);font-size:.83rem;text-align:center;padding:20px">No notices yet.</p>{% endif %}
+      </div>
+
+      <!-- Upcoming Events -->
+      <div class="glass-card reveal d2" style="padding:22px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <span style="font-family:var(--fd);font-size:.88rem;color:var(--white)">Upcoming Events</span>
+          <a href="{{ url_for('notices') }}" style="font-size:.72rem;color:var(--accent);font-weight:600">View All</a>
+        </div>
+        {% for ev in events %}
+        {% set p = ev.event_date.split('-') if ev.event_date else ['','',''] %}
+        {% set months = {'01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec'} %}
+        <div class="event-item">
+          <div class="ev-day-box">
+            <div class="ev-num">{{ p[2] if p|length>2 else '—' }}</div>
+            <div class="ev-mon">{{ months.get(p[1],'') if p|length>1 else '' }}</div>
+          </div>
+          <div>
+            <div class="ev-title">{{ ev.title }}</div>
+            <div class="ev-date">{{ ev.event_date }} · {{ ev.event_type }}</div>
+          </div>
+        </div>{% endfor %}
+        {% if not events %}<p style="color:var(--text-muted);font-size:.83rem;text-align:center;padding:20px">No events scheduled.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ACHIEVEMENTS (dynamic from settings) ══════════════════════ -->
+{% if settings.homepage_show_achievements == '1' %}
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Our Pride</span>
+      <h2 class="section-title">Our <span>Achievements</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="ach-grid reveal">
+      <div class="ach-card gold">
+        <div class="ach-icon">🏆</div>
+        <div class="ach-val">{{ settings.ach1_val or '98%' }}</div>
+        <div class="ach-label">{{ settings.ach1_label or 'Pass Percentage' }}</div>
+      </div>
+      <div class="ach-card green d1">
+        <div class="ach-icon">🥇</div>
+        <div class="ach-val">{{ settings.ach2_val or '15+' }}</div>
+        <div class="ach-label">{{ settings.ach2_label or 'Sports Awards' }}</div>
+      </div>
+      <div class="ach-card blue d2">
+        <div class="ach-icon">👨‍🏫</div>
+        <div class="ach-val">{{ settings.ach3_val or '25+' }}</div>
+        <div class="ach-label">{{ settings.ach3_label or 'Teachers Dedicated' }}</div>
+      </div>
+      <div class="ach-card purple d3">
+        <div class="ach-icon">⭐</div>
+        <div class="ach-val">{{ settings.ach4_val or '10+' }}</div>
+        <div class="ach-label">{{ settings.ach4_label or 'Years of Excellence' }}</div>
+      </div>
+    </div>
+  </div>
+</section>{% endif %}
+
+<!-- ═══ ACADEMIC STRUCTURE ═════════════════════════════════════════ -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Academics</span>
+      <h2 class="section-title">Academic <span>Structure</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="class-cards reveal">
+      <div class="class-btn c1">
+        <div class="class-btn-title">Class 5 – 9</div>
+        <div class="class-btn-sub">Sections: A, B, C, D</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;justify-content:center">
+          {% for c in ['5','6','7','8','9'] %}{% for s in ['A','B','C','D'] %}
+          <a href="{{ url_for('class_page',cn=c,sec=s) }}" style="font-size:.62rem;padding:2px 6px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.25);border-radius:4px;color:#93c5fd">{{ c }}-{{ s }}</a>
+          {% endfor %}{% endfor %}
+        </div>
+      </div>
+      <div class="class-btn c2">
+        <div class="class-btn-title">Class 10</div>
+        <div class="class-btn-sub">Sections: A, B, C</div>
+        <div style="display:flex;gap:7px;margin-top:10px;justify-content:center">
+          {% for s in ['A','B','C'] %}<a href="{{ url_for('class_page',cn='10',sec=s) }}" style="font-size:.72rem;padding:3px 10px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.25);border-radius:4px;color:#6ee7b7">Sec {{ s }}</a>{% endfor %}
+        </div>
+      </div>
+      <div class="class-btn c3">
+        <div class="class-btn-title">Class 11</div>
+        <div class="class-btn-sub">Science &amp; Arts</div>
+        <div style="display:flex;gap:7px;margin-top:10px;justify-content:center">
+          {% for s in ['Science','Arts'] %}<a href="{{ url_for('class_page',cn='11',sec=s) }}" style="font-size:.72rem;padding:3px 10px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.25);border-radius:4px;color:#c4b5fd">{{ s }}</a>{% endfor %}
+        </div>
+      </div>
+      <div class="class-btn c4">
+        <div class="class-btn-title">Class 12</div>
+        <div class="class-btn-sub">Science &amp; Arts</div>
+        <div style="display:flex;gap:7px;margin-top:10px;justify-content:center">
+          {% for s in ['Science','Arts'] %}<a href="{{ url_for('class_page',cn='12',sec=s) }}" style="font-size:.72rem;padding:3px 10px;background:rgba(240,180,41,.15);border:1px solid rgba(240,180,41,.25);border-radius:4px;color:var(--accent)">{{ s }}</a>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FACILITIES (toggle from settings) ═════════════════════════ -->
+{% if settings.homepage_show_facilities == '1' and facilities %}
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Infrastructure</span>
+      <h2 class="section-title">Our <span>Facilities</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="facilities-grid">
+      {% for f in facilities %}
+      <div class="facility-card-full reveal">
+        <div class="facility-photo">
+          {% if f.photo %}<img src="{{ url_for('static',filename='images/'+f.photo) }}" alt="{{ f.name }}" loading="lazy">
+          {% else %}<div class="facility-photo-placeholder"><span style="font-size:3rem">{{ f.icon or '🏫' }}</span></div>{% endif %}
+          <div class="facility-photo-badge">{{ f.icon or '🏫' }}</div>
+        </div>
+        <div class="facility-content">
+          <h3 class="facility-title">{{ f.name }}</h3>
+          {% if f.description %}<p class="facility-desc">{{ f.description }}</p>{% endif %}
+          {% if f.details %}<div class="facility-features">{% for t in f.details.split('|') %}<span class="feature-tag">{{ t.strip() }}</span>{% endfor %}</div>{% endif %}
+        </div>
+      </div>{% endfor %}
+    </div>
+    <div class="text-center mt-20"><a href="{{ url_for('facilities') }}" class="btn-outline">View All Facilities →</a></div>
+  </div>
+</section>{% endif %}
+
+<!-- ═══ TEACHERS PREVIEW (toggle from settings) ════════════════════ -->
+{% if settings.homepage_show_teachers == '1' and teachers %}
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Our Faculty</span>
+      <h2 class="section-title">Meet Our <span>Teachers</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="grid-3" style="gap:16px">
+      {% for t in teachers %}
+      <div class="glass-card reveal" style="padding:20px;text-align:center">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#1a3560,#0d1f3c);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-family:var(--fd);font-size:1.3rem;color:var(--accent);overflow:hidden">
+          {% if t.photo %}<img src="{{ url_for('static',filename='images/'+t.photo) }}" alt="{{ t.name }}" style="width:100%;height:100%;object-fit:cover">{% else %}{{ t.name[0] }}{% endif %}
+        </div>
+        <div style="font-weight:700;color:var(--white);margin-bottom:2px">{{ t.name }}</div>
+        <div style="font-size:.73rem;color:var(--text-muted);margin-bottom:3px">{{ t.designation }}</div>
+        <div style="font-size:.8rem;color:var(--accent);font-weight:600">{{ t.subject }}</div>
+      </div>{% endfor %}
+    </div>
+    <div class="text-center mt-20"><a href="{{ url_for('about') }}#teachers" class="btn-outline">View All Faculty →</a></div>
+  </div>
+</section>{% endif %}
+
+<!-- ═══ GALLERY PREVIEW (toggle from settings) ════════════════════ -->
+{% if settings.homepage_show_gallery == '1' and gallery %}
+<section class="section {% if settings.homepage_show_teachers == '1' and teachers %}{% else %}section-alt{% endif %}">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Memories</span>
+      <h2 class="section-title">Photo <span>Gallery</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px" class="reveal">
+      {% for item in gallery %}
+      <div class="gallery-item" style="position:relative;border-radius:var(--rs);overflow:hidden;aspect-ratio:4/3;background:var(--navy-card);cursor:pointer">
+        <img src="{{ url_for('static',filename='images/'+item.image_path) }}" alt="{{ item.title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;transition:transform .4s" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(7,15,30,.85),transparent);padding:10px;pointer-events:none">
+          <span style="font-size:.75rem;font-weight:600;color:var(--white)">{{ item.title }}</span>
+        </div>
+      </div>{% endfor %}
+    </div>
+    <div class="text-center mt-20"><a href="{{ url_for('gallery') }}" class="btn-outline">View Full Gallery →</a></div>
+  </div>
+</section>{% endif %}
+
+<!-- ═══ BOTTOM STATS ROW (dynamic from settings) ══════════════════ -->
+<div class="stats-row">
+  <div class="stat-row-item reveal"><div class="stat-row-icon">🎓</div><div class="stat-row-val">{{ settings.stat1_val or '800+' }}</div><div class="stat-row-lbl">{{ settings.stat1_label or 'Students' }}</div></div>
+  <div class="stat-row-item reveal d1"><div class="stat-row-icon">👨‍🏫</div><div class="stat-row-val">{{ settings.stat2_val or '35+' }}</div><div class="stat-row-lbl">{{ settings.stat2_label or 'Teachers' }}</div></div>
+  <div class="stat-row-item reveal d2"><div class="stat-row-icon">🔬</div><div class="stat-row-val">{{ settings.stat3_val or '8' }}</div><div class="stat-row-lbl">{{ settings.stat3_label or 'Class Groups' }}</div></div>
+  <div class="stat-row-item reveal d3"><div class="stat-row-icon">🏅</div><div class="stat-row-val">{{ settings.stat4_val or '60+' }}</div><div class="stat-row-lbl">{{ settings.stat4_label or 'Years Legacy' }}</div></div>
+</div>
+
+<!-- Social floating buttons -->
+{% if settings.whatsapp_number %}
+<a href="https://wa.me/{{ settings.whatsapp_number }}" target="_blank" style="position:fixed;bottom:80px;right:20px;width:46px;height:46px;background:#25d366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 4px 16px rgba(37,211,102,.4);z-index:400;transition:transform .2s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">💬</a>
+{% endif %}
+{% if settings.facebook_url %}
+<a href="{{ settings.facebook_url }}" target="_blank" style="position:fixed;bottom:136px;right:20px;width:46px;height:46px;background:#1877f2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 4px 16px rgba(24,119,242,.4);z-index:400;transition:transform .2s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">📘</a>
+{% endif %}
+
+{% endblock %}

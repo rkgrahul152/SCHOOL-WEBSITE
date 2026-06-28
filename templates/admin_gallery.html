@@ -1,0 +1,30 @@
+{% extends "admin_base.html" %}{% block title %}Gallery{% endblock %}
+{% block admin_content %}
+<div class="admin-topbar-row"><div><div class="admin-page-title">🖼️ Manage Gallery</div><div class="admin-page-sub">Upload and organize school photos</div></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">➕ Upload Photo</div></div>
+  <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_add_gallery') }}" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="form-group"><label>Title *</label><input type="text" name="title" class="form-control" placeholder="e.g. Sports Day 2024" required></div>
+      <div class="form-group"><label>Category *</label><select name="category" class="form-control" required><option>Annual Function</option><option>Sports</option><option>Science Exhibition</option><option>Cultural</option><option>Campus</option></select></div>
+      <div class="form-group"><label>Event Date</label><input type="date" name="event_date" class="form-control"></div>
+      <div class="form-group"><label>Description</label><input type="text" name="description" class="form-control" placeholder="Brief description"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Image * (JPG/PNG/GIF)</label><input type="file" name="image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" required></div>
+    </div>
+    <div style="margin-top:13px"><button type="submit" class="btn-gold">📸 Upload Photo</button></div>
+  </form></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">🖼️ Gallery ({{ gallery|length }} photos)</div></div>
+  <div class="admin-card-body">
+    {% if gallery %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px">
+      {% for item in gallery %}
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--rs);overflow:hidden">
+        <img src="{{ url_for('static',filename='images/'+item.image_path) }}" alt="{{ item.title }}" style="width:100%;height:125px;object-fit:cover" onerror="this.style.display='none'">
+        <div style="padding:9px">
+          <div style="font-weight:600;font-size:.79rem;color:var(--white);margin-bottom:3px">{{ item.title }}</div>
+          <span class="badge badge-gold" style="font-size:.62rem">{{ item.category }}</span>
+          <a href="{{ url_for('admin_delete_gallery',i=item.id) }}" class="btn-danger" style="margin-top:8px;display:block;text-align:center;font-size:.74rem" onclick="return confirm('Delete?')">🗑 Delete</a>
+        </div>
+      </div>{% endfor %}
+    </div>{% else %}
+    <div style="text-align:center;padding:36px;color:var(--text-muted)"><div style="font-size:2.5rem;margin-bottom:10px">🖼️</div><p>No photos yet.</p></div>{% endif %}
+  </div></div>{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "admin_base.html" %}{% block title %}Timetables{% endblock %}
+{% block admin_content %}
+<div class="admin-topbar-row"><div><div class="admin-page-title">🕐 Manage Timetables</div><div class="admin-page-sub">Build class routines for all sections</div></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">➕ Add Timetable Entry</div></div>
+  <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_add_routine') }}">
+    <div class="form-grid">
+      <div class="form-group"><label>Class *</label><select name="class" class="form-control" required><option value="">Select</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}">Class {{ c }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label>Section *</label><select name="section" class="form-control" required><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="Science">Science</option><option value="Arts">Arts</option></select></div>
+      <div class="form-group"><label>Day *</label><select name="day" class="form-control" required>{% for d in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] %}<option>{{ d }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label>Period *</label><select name="period" class="form-control" required>{% for p in range(1,9) %}<option value="{{ p }}">Period {{ p }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label>Subject *</label><input type="text" name="subject" class="form-control" placeholder="e.g. Mathematics" required></div>
+      <div class="form-group"><label>Teacher</label><input type="text" name="teacher" class="form-control" placeholder="Teacher name"></div>
+      <div class="form-group"><label>Time Slot</label><input type="text" name="time_slot" class="form-control" placeholder="09:00–09:45"></div>
+    </div>
+    <div style="margin-top:13px"><button type="submit" class="btn-gold">🕐 Add Entry</button></div>
+  </form></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">📋 All Entries ({{ routines|length }})</div></div>
+  <div class="admin-card-body" style="padding:0"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Class</th><th>Section</th><th>Day</th><th>Period</th><th>Subject</th><th>Teacher</th><th>Time</th><th></th></tr></thead><tbody>
+    {% for r in routines %}<tr><td>{{ r.class }}</td><td><span class="badge badge-gold">{{ r.section }}</span></td><td>{{ r.day }}</td><td style="text-align:center"><span class="badge badge-blue">{{ r.period }}</span></td><td style="font-weight:600;color:var(--white)">{{ r.subject }}</td><td style="font-size:.79rem">{{ r.teacher or '—' }}</td><td style="font-size:.76rem;color:var(--text-muted)">{{ r.time_slot or '—' }}</td>
+    <td><a href="{{ url_for('admin_delete_routine',i=r.id) }}" class="btn-danger" onclick="return confirm('Delete?')">🗑</a></td></tr>
+    {% else %}<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px">No entries yet.</td></tr>{% endfor %}
+  </tbody></table></div></div></div>{% endblock %}

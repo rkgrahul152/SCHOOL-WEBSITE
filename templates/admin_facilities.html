@@ -1,0 +1,54 @@
+{% extends "admin_base.html" %}{% block title %}Facilities{% endblock %}
+{% block admin_content %}
+<div class="admin-topbar-row"><div><div class="admin-page-title">🏫 Manage Facilities</div><div class="admin-page-sub">Add photos and details for each school facility</div></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">➕ Add New Facility</div></div>
+  <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_add_facility') }}" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="form-group"><label>Name *</label><input type="text" name="name" class="form-control" placeholder="e.g. Science Laboratory" required></div>
+      <div class="form-group"><label>Icon (Emoji)</label><input type="text" name="icon" class="form-control" value="🏫" maxlength="4"></div>
+      <div class="form-group"><label>Display Order</label><input type="number" name="sort_order" class="form-control" value="99" min="1"></div>
+      <div class="form-group"><label>Photo (JPG/PNG)</label><input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Description</label><textarea name="description" class="form-control" rows="2" placeholder="Short description shown on website..."></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Feature Tags (separate with | pipe)</label><input type="text" name="details" class="form-control" placeholder="40+ Computers | High-Speed Internet | UPS | AC"><small style="font-size:.69rem;color:var(--text-muted)">Each tag separated by |</small></div>
+    </div>
+    <div style="margin-top:13px"><button type="submit" class="btn-gold">🏫 Add Facility</button></div>
+  </form></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">🏫 All Facilities ({{ facilities|length }})</div></div>
+  <div class="admin-card-body" style="padding:13px">
+    {% for f in facilities %}
+    <div style="background:rgba(255,255,255,.03);border:1px solid {{ 'rgba(240,180,41,.18)' if f.is_active else 'rgba(239,68,68,.18)' }};border-radius:var(--r);overflow:hidden;margin-bottom:13px">
+      <div style="display:flex;flex-wrap:wrap">
+        <div style="width:145px;min-height:105px;flex-shrink:0;position:relative;overflow:hidden">
+          {% if f.photo %}<img src="{{ url_for('static',filename='images/'+f.photo) }}" alt="{{ f.name }}" style="width:100%;height:105px;object-fit:cover">
+          {% else %}<div style="width:100%;height:105px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:var(--accent-glow)">{{ f.icon or '🏫' }}</div>{% endif %}
+          {% if not f.is_active %}<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center"><span style="background:rgba(239,68,68,.8);color:white;font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:3px">HIDDEN</span></div>{% endif %}
+        </div>
+        <div style="flex:1;padding:12px 16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+            <div><span style="font-size:1.2rem;margin-right:5px">{{ f.icon or '🏫' }}</span><strong style="color:var(--white)">{{ f.name }}</strong><span style="margin-left:6px;font-size:.68rem;color:var(--text-muted)">Order: {{ f.sort_order }}</span></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <a href="{{ url_for('admin_toggle_facility',i=f.id) }}" class="badge {{ 'badge-green' if f.is_active else 'badge-red' }}" style="cursor:pointer">{{ '👁 Visible' if f.is_active else '🙈 Hidden' }}</a>
+              <button onclick="document.getElementById('ef{{ f.id }}').style.display=document.getElementById('ef{{ f.id }}').style.display==='none'?'block':'none'" class="badge badge-gold" style="cursor:pointer;border:none">✏️ Edit</button>
+              <a href="{{ url_for('admin_delete_facility',i=f.id) }}" class="btn-danger" onclick="return confirm('Delete {{ f.name }}?')">🗑</a>
+            </div>
+          </div>
+          {% if f.description %}<p style="font-size:.79rem;color:var(--text-muted);margin-bottom:6px">{{ f.description }}</p>{% endif %}
+          {% if f.details %}<div style="display:flex;flex-wrap:wrap;gap:4px">{% for t in f.details.split('|') %}<span class="feature-tag">{{ t.strip() }}</span>{% endfor %}</div>{% endif %}
+        </div>
+      </div>
+      <div id="ef{{ f.id }}" style="display:none;border-top:1px solid rgba(255,255,255,.06);padding:16px;background:rgba(255,255,255,.02)">
+        <form method="POST" action="{{ url_for('admin_edit_facility',i=f.id) }}" enctype="multipart/form-data">
+          <div class="form-grid">
+            <div class="form-group"><label>Name *</label><input type="text" name="name" class="form-control" value="{{ f.name }}" required></div>
+            <div class="form-group"><label>Icon</label><input type="text" name="icon" class="form-control" value="{{ f.icon or '🏫' }}" maxlength="4"></div>
+            <div class="form-group"><label>Order</label><input type="number" name="sort_order" class="form-control" value="{{ f.sort_order }}"></div>
+            <div class="form-group"><label>Replace Photo</label><input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif"></div>
+            <div class="form-group" style="grid-column:1/-1"><label>Description</label><textarea name="description" class="form-control" rows="2">{{ f.description or '' }}</textarea></div>
+            <div class="form-group" style="grid-column:1/-1"><label>Feature Tags (| separated)</label><input type="text" name="details" class="form-control" value="{{ f.details or '' }}"></div>
+          </div>
+          <div style="margin-top:11px;display:flex;gap:8px"><button type="submit" class="btn-gold">💾 Save</button></div>
+        </form>
+      </div>
+    </div>
+    {% else %}<div style="text-align:center;padding:36px;color:var(--text-muted)"><div style="font-size:2.5rem;margin-bottom:10px">🏫</div><p>No facilities yet.</p></div>{% endfor %}
+  </div></div>{% endblock %}

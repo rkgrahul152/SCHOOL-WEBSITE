@@ -1,0 +1,55 @@
+{% extends "base.html" %}{% block title %}About – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="page-hero-content">
+  <div class="breadcrumb"><a href="/">Home</a><span>›</span><span>About</span></div>
+  <h1>About Our <span style="color:var(--accent)">School</span></h1>
+  <p>A legacy of academic excellence since {{ settings.established }}</p>
+</div></div>
+<section class="section"><div class="container">
+  <div class="grid-2" style="gap:40px;align-items:start">
+    <div class="reveal">
+      <span class="section-label">Our Story</span>
+      <h2 class="section-title">School <span>History</span></h2>
+      <div class="divider" style="margin:12px 0 20px;margin-left:0"></div>
+      <p style="color:var(--text-light);margin-bottom:13px;line-height:1.8">Pundibari R.G.L High School was established in <strong style="color:var(--accent)">{{ settings.established }}</strong> with a vision to bring quality education to Pundibari and surrounding areas of Cooch Behar district, West Bengal.</p>
+      <p style="color:var(--text-muted);margin-bottom:13px;line-height:1.8">Over the decades, the school has grown into one of the region's most respected government aided schools, serving students from Class 5 through Class 12.</p>
+      <p style="color:var(--text-muted);line-height:1.8">Affiliated with WBBSE and WBCHSE, our school maintains consistently high academic standards while nurturing holistic development.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px">
+        {% for v,l,c in [('60+','Years of Excellence','var(--accent)'),('800+','Students','var(--c-green)'),('35+','Teachers','var(--c-blue)'),('95%','Pass Rate','var(--c-purple)')] %}
+        <div style="padding:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--rs);text-align:center">
+          <div style="font-family:var(--fd);font-size:1.4rem;color:{{ c }};margin-bottom:3px">{{ v }}</div>
+          <div style="font-size:.72rem;color:var(--text-muted)">{{ l }}</div>
+        </div>{% endfor %}
+      </div>
+    </div>
+    <div class="reveal d2">
+      <h3 style="font-family:var(--fd);color:var(--white);margin-bottom:20px;font-size:1rem">School Timeline</h3>
+      <div class="timeline">
+        {% for yr,txt in [('1965','School founded by local community leaders to educate the youth of Pundibari.'),('1975','Government aided status granted by West Bengal Government.'),('1990','Higher Secondary (Class XI–XII) added with Science and Arts streams.'),('2005','Computer Laboratory set up with 40+ systems.'),('2015','Smart classroom technology introduced; 100% Madhyamik pass rate achieved.'),('Present','800+ students, 35+ faculty, modern infrastructure.')] %}
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">{{ yr }}</div><div class="tl-text">{{ txt }}</div></div>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div></section>
+<section class="section section-alt"><div class="container">
+  <div class="section-header reveal"><span class="section-label">Purpose</span><h2 class="section-title">Mission & <span>Vision</span></h2><div class="divider"></div></div>
+  <div class="grid-2 reveal" style="gap:18px">
+    <div class="glass-card" style="padding:28px"><div style="font-size:2.2rem;margin-bottom:12px">🎯</div><h3 style="font-family:var(--fd);color:var(--accent);margin-bottom:12px">Our Mission</h3><p style="color:var(--text-light);line-height:1.8">To provide quality, equitable, and inclusive education that empowers every student with knowledge, skills, and values needed to excel in life and contribute meaningfully to society.</p></div>
+    <div class="glass-card d2" style="padding:28px"><div style="font-size:2.2rem;margin-bottom:12px">🔭</div><h3 style="font-family:var(--fd);color:var(--accent);margin-bottom:12px">Our Vision</h3><p style="color:var(--text-light);line-height:1.8">To be the leading centre of excellence in government school education in North Bengal — where every child discovers their potential and emerges as a responsible, enlightened citizen.</p></div>
+  </div>
+</div></section>
+<section class="section" id="teachers"><div class="container">
+  <div class="section-header reveal"><span class="section-label">Our Team</span><h2 class="section-title">Faculty & <span>Staff</span></h2><div class="divider"></div></div>
+  <div class="grid-3" style="gap:16px">
+    {% for t in teachers %}
+    <div class="glass-card reveal" style="padding:20px;text-align:center">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#1a3560,#0d1f3c);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-family:var(--fd);font-size:1.3rem;color:var(--accent);overflow:hidden">
+        {% if t.photo %}<img src="{{ url_for('static',filename='images/'+t.photo) }}" alt="{{ t.name }}" style="width:100%;height:100%;object-fit:cover">{% else %}{{ t.name[0] }}{% endif %}
+      </div>
+      <div style="font-weight:700;color:var(--white);margin-bottom:2px">{{ t.name }}</div>
+      <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:3px">{{ t.designation }}</div>
+      <div style="font-size:.78rem;color:var(--accent);font-weight:600;margin-bottom:6px">{{ t.subject }}</div>
+      <span class="badge badge-gold">{{ t.experience }}</span>
+    </div>{% endfor %}
+  </div>
+</div></section>{% endblock %}

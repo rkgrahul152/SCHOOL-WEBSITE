@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% block title %}Contact – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="page-hero-content">
+  <div class="breadcrumb"><a href="/">Home</a><span>›</span><span>Contact</span></div>
+  <h1>Contact <span style="color:var(--accent)">Us</span></h1>
+  <p>Get in touch with the school administration</p>
+</div></div>
+<section class="section"><div class="container">
+  <div class="grid-2" style="gap:24px;align-items:start">
+    <div class="reveal">
+      <div class="glass-card" style="padding:26px">
+        <h3 style="font-family:var(--fd);color:var(--white);margin-bottom:16px">🏫 School Information</h3>
+        {% for icon,lbl,val in [('📍','Address',settings.address),('📞','Phone',settings.phone),('✉️','Email',settings.email),('🕐','Hours','Mon–Sat: 10:00 AM – 4:00 PM'),('🏛️','Affiliation','WBBSE (Class 5–10) · WBCHSE (Class 11–12)'),('👨‍💼','Principal',settings.principal_name)] %}
+        <div class="contact-item"><div class="contact-icon">{{ icon }}</div>
+          <div><div class="contact-label">{{ lbl }}</div><div class="contact-val">{{ val }}</div></div>
+        </div>{% endfor %}
+      </div>
+    </div>
+    <div class="reveal d2">
+      <div class="glass-card" style="padding:24px;margin-bottom:18px">
+        <h3 style="font-family:var(--fd);color:var(--white);margin-bottom:14px">🔗 Quick Links</h3>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          {% for txt,url in [('📢 Latest Notices','/notices'),('📊 Check Results','/results'),('🎓 Student Login','/student/login'),('🖼️ Photo Gallery','/gallery'),('🏫 Facilities','/facilities'),('👨‍🏫 About School','/about')] %}
+          <a href="{{ url }}" style="display:flex;align-items:center;gap:8px;padding:10px 13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--rs);color:var(--text-light);transition:all var(--tr)" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.color='var(--text-light)'">{{ txt }}</a>{% endfor %}
+        </div>
+      </div>
+      <div class="glass-card" style="padding:20px;text-align:center">
+        <div style="font-size:1.8rem;margin-bottom:8px">🗺️</div>
+        <p style="color:var(--text-muted);font-size:.83rem">{{ settings.address }}</p>
+      </div>
+    </div>
+  </div>
+</div></section>{% endblock %}

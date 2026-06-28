@@ -1,0 +1,104 @@
+{% extends "base.html" %}{% block title %}Results – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="page-hero-content">
+  <div class="breadcrumb"><a href="/">Home</a><span>›</span><span>Results</span></div>
+  <h1>Check <span style="color:var(--accent)">Results</span></h1>
+  <p>Select Class · Section · Roll Number · Exam to view your result</p>
+</div></div>
+<section class="section"><div class="container">
+  <!-- Steps -->
+  <div class="glass-card" style="padding:16px 22px;margin-bottom:26px;max-width:800px;margin-left:auto;margin-right:auto">
+    <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;text-align:center">
+      {% for step,label,icon in [('1','Select Class & Section','🏫'),('2','Enter Roll Number','🔢'),('3','Choose Examination','📋'),('4','View Result','📊')] %}
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:76px">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-glow);border:2px solid rgba(240,180,41,.3);display:flex;align-items:center;justify-content:center;font-size:1rem">{{ icon }}</div>
+        <div style="font-size:.6rem;font-weight:700;color:var(--accent);text-transform:uppercase">Step {{ step }}</div>
+        <div style="font-size:.7rem;color:var(--text-muted)">{{ label }}</div>
+      </div>
+      {% if not loop.last %}<div style="color:var(--text-muted);font-size:1.2rem;align-self:center;padding-top:6px">›</div>{% endif %}{% endfor %}
+    </div>
+  </div>
+  <!-- Form -->
+  <div class="glass-card result-search-card">
+    <h3 style="font-family:var(--fd);color:var(--white);margin-bottom:6px;text-align:center">Result Lookup</h3>
+    <p style="text-align:center;font-size:.78rem;color:var(--text-muted);margin-bottom:20px">Roll numbers restart from 1 in each section. Fill <strong style="color:var(--accent)">all four fields</strong>.</p>
+    <form method="POST">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+        <div class="form-group"><label>Class *</label>
+          <select name="class" class="form-control" required id="rClass" onchange="updateSections('rClass','rSection',this.value)">
+            <option value="">— Select Class —</option>
+            {% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}" {{ 'selected' if request.form.get('class')==c else '' }}>Class {{ c }}</option>{% endfor %}
+          </select></div>
+        <div class="form-group"><label>Section *</label>
+          <select name="section" class="form-control" required id="rSection">
+            <option value="">— Select Section —</option>
+            {% if request.form.get('section') %}<option value="{{ request.form.get('section') }}" selected>{{ request.form.get('section') }}</option>{% endif %}
+          </select></div>
+        <div class="form-group"><label>Roll Number *</label>
+          <input type="number" name="roll_number" class="form-control" placeholder="e.g. 1, 5, 23" min="1" value="{{ request.form.get('roll_number','') }}" required>
+          <small style="color:var(--text-muted);font-size:.68rem">Roll starts from 1 per section</small></div>
+        <div class="form-group"><label>Examination *</label>
+          <select name="exam_name" class="form-control" required>
+            <option value="">— Select Exam —</option>
+            {% for e in exams %}<option value="{{ e.exam_name }}" {{ 'selected' if request.form.get('exam_name')==e.exam_name else '' }}>{{ e.exam_name }}</option>{% endfor %}
+            {% for p in ['Annual Exam 2024-25','Half-Yearly 2024-25','First Unit Test 2024-25','Second Unit Test 2024-25','Pre-Board 2025'] %}{% if p not in exams|map(attribute='exam_name')|list %}<option value="{{ p }}" {{ 'selected' if request.form.get('exam_name')==p else '' }}>{{ p }}</option>{% endif %}{% endfor %}
+          </select></div>
+      </div>
+      <button type="submit" class="btn-gold" style="width:100%;padding:11px;font-size:.9rem;margin-top:14px">🔍 Search Result</button>
+    </form>
+  </div>
+  {% if searched and error %}
+  <div class="glass-card" style="padding:28px;text-align:center;max-width:560px;margin:0 auto 24px;border-color:rgba(239,68,68,.3)">
+    <div style="font-size:2rem;margin-bottom:10px">❌</div>
+    <p style="color:#fca5a5;font-weight:600">{{ error }}</p>
+    <p style="color:var(--text-muted);font-size:.8rem;margin-top:7px">Verify Class · Section · Roll Number · Exam Name</p>
+  </div>{% endif %}
+  {% if result_data %}{% set first=result_data[0] %}
+  {% set tot_o=result_data|sum(attribute='marks_obtained') %}{% set tot_m=result_data|sum(attribute='total_marks') %}
+  {% set pct=((tot_o/tot_m)*100)|round(1) if tot_m>0 else 0 %}
+  {% set og='A+' if pct>=85 else 'A' if pct>=75 else 'B+' if pct>=65 else 'B' if pct>=55 else 'C' if pct>=40 else 'F' %}
+  <div style="max-width:800px;margin:0 auto" id="rc">
+    <div class="glass-card" style="padding:22px 26px;margin-bottom:12px;text-align:center;border-color:rgba(240,180,41,.25)">
+      <div style="font-family:var(--fd);font-size:1.05rem;color:var(--white)">{{ settings.school_name }}</div>
+      <div style="font-size:.74rem;color:var(--text-muted);margin-bottom:12px">{{ settings.address }}</div>
+      <div style="background:var(--accent-glow);border:1px solid rgba(240,180,41,.25);border-radius:var(--rs);padding:4px 16px;display:inline-block"><span style="font-family:var(--fd);font-size:.8rem;color:var(--accent)">{{ first.exam_name }} — Result Card</span></div>
+    </div>
+    <div class="glass-card" style="padding:16px 22px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:11px">
+        {% for lbl,val in [('Student Name',first.student_name),('Roll Number',first.roll_number),('Class',first.class~' – '~first.section),('Year',first.year|string)] %}
+        <div style="padding:9px 11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--rs)">
+          <div style="font-size:.63rem;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:2px">{{ lbl }}</div>
+          <div style="font-weight:700;color:var(--white);font-size:.88rem">{{ val }}</div>
+        </div>{% endfor %}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+      {% for val,lbl,col in [(tot_o|int,'Marks Obtained','var(--accent)'),(tot_m|int,'Total Marks','var(--white)'),(pct|string+'%','Percentage','#10b981' if pct>=75 else '#f59e0b' if pct>=50 else '#ef4444'),(og,'Overall Grade','')] %}
+      <div class="glass-card" style="padding:14px;text-align:center"><div style="font-family:var(--fd);font-size:1.45rem;color:{{ col if col else 'var(--accent)' }}">{{ val }}</div><div style="font-size:.68rem;color:var(--text-muted);margin-top:2px">{{ lbl }}</div></div>{% endfor %}
+    </div>
+    <div class="result-table-wrap" style="margin-bottom:16px">
+      <table class="result-table"><thead><tr><th>#</th><th>Subject</th><th>Marks</th><th>Total</th><th>%</th><th>Grade</th><th>Status</th></tr></thead>
+      <tbody>{% for r in result_data %}{% set sp=((r.marks_obtained/r.total_marks)*100)|round(1) if r.total_marks else 0 %}
+        <tr><td style="color:var(--text-muted)">{{ loop.index }}</td><td style="font-weight:700">{{ r.subject }}</td>
+        <td style="font-weight:700;color:var(--accent)">{{ r.marks_obtained|int }}</td><td>{{ r.total_marks|int }}</td>
+        <td><div style="display:flex;align-items:center;gap:5px">{{ sp }}%<div style="flex:1;height:3px;background:rgba(255,255,255,.07);border-radius:2px;min-width:30px"><div style="height:100%;width:{{ sp }}%;border-radius:2px;background:{% if sp>=75 %}#10b981{% elif sp>=50 %}#f59e0b{% else %}#ef4444{% endif %}"></div></div></div></td>
+        <td>{% set g=r.grade or '' %}<span class="grade-badge grade-{{ 'A' if g.startswith('A') else 'B' if g.startswith('B') else 'C' if g.startswith('C') else 'D' }}">{{ g or '—' }}</span></td>
+        <td>{% if r.marks_obtained>=(r.total_marks*0.33) %}<span class="badge badge-green" style="font-size:.66rem">✓ Pass</span>{% else %}<span class="badge badge-red" style="font-size:.66rem">✗ Fail</span>{% endif %}</td>
+        </tr>{% endfor %}
+        <tr style="background:rgba(240,180,41,.05);border-top:2px solid rgba(240,180,41,.18)">
+          <td colspan="2" style="font-weight:800;color:var(--accent)">GRAND TOTAL</td>
+          <td style="font-weight:800;color:var(--accent)">{{ tot_o|int }}</td><td style="font-weight:700">{{ tot_m|int }}</td>
+          <td style="font-weight:700;color:{% if pct>=75 %}#10b981{% elif pct>=50 %}#f59e0b{% else %}#ef4444{% endif %}">{{ pct }}%</td>
+          <td colspan="2"><span class="grade-badge grade-{{ 'A' if pct>=75 else 'B' if pct>=55 else 'C' if pct>=40 else 'D' }}">{{ og }}</span></td>
+        </tr>
+      </tbody></table>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <p style="font-size:.72rem;color:var(--text-muted);font-style:italic">* Computer-generated result. Contact school office for official copy.</p>
+      <button onclick="window.print()" class="btn-outline" style="padding:8px 18px;font-size:.8rem">🖨 Print</button>
+    </div>
+  </div>{% endif %}
+</div></section>
+<script>window.addEventListener('DOMContentLoaded',()=>{const cls='{{ request.form.get("class","") }}';if(cls){document.getElementById('rClass').value=cls;updateSections('rClass','rSection',cls);setTimeout(()=>{const sec='{{ request.form.get("section","") }}';if(sec)document.getElementById('rSection').value=sec;},60);}});</script>
+<style>@media print{.navbar,.topbar,.footer,.page-hero,.result-search-card,button,.breadcrumb{display:none!important}body{background:white;color:black}.result-table th{background:#f5f5f5!important;color:#333!important}.result-table td{color:#333!important}}</style>
+{% endblock %}

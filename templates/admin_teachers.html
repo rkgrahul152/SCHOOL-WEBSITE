@@ -1,0 +1,30 @@
+{% extends "admin_base.html" %}{% block title %}Teachers{% endblock %}
+{% block admin_content %}
+<div class="admin-topbar-row"><div><div class="admin-page-title">👨‍🏫 Manage Teachers</div><div class="admin-page-sub">Add and manage teaching staff profiles</div></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">➕ Add Teacher</div></div>
+  <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_add_teacher') }}" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="form-group"><label>Full Name *</label><input type="text" name="name" class="form-control" placeholder="e.g. Mr. Rajesh Barman" required></div>
+      <div class="form-group"><label>Designation</label><select name="designation" class="form-control"><option>Headmaster</option><option>Asst. Headmaster</option><option selected>Assistant Teacher</option><option>Group D Staff</option></select></div>
+      <div class="form-group"><label>Subject *</label><input type="text" name="subject" class="form-control" placeholder="e.g. Mathematics" required></div>
+      <div class="form-group"><label>Qualification</label><input type="text" name="qualification" class="form-control" placeholder="e.g. M.Sc., B.Ed."></div>
+      <div class="form-group"><label>Experience</label><input type="text" name="experience" class="form-control" placeholder="e.g. 10 years"></div>
+      <div class="form-group"><label>Phone</label><input type="text" name="phone" class="form-control"></div>
+      <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control"></div>
+      <div class="form-group"><label>Sort Order</label><input type="number" name="sort_order" class="form-control" value="99"></div>
+      <div class="form-group"><label>Photo (optional)</label><input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png,.webp"></div>
+    </div>
+    <div style="margin-top:13px"><button type="submit" class="btn-gold">👨‍🏫 Add Teacher</button></div>
+  </form></div></div>
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">👨‍🏫 All Teachers ({{ teachers|length }})</div></div>
+  <div class="admin-card-body" style="padding:0"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>#</th><th>Name</th><th>Designation</th><th>Subject</th><th>Qualification</th><th>Exp.</th><th>Action</th></tr></thead><tbody>
+    {% for t in teachers %}<tr><td>{{ loop.index }}</td>
+    <td><div style="display:flex;align-items:center;gap:8px">
+      {% if t.photo %}<img src="{{ url_for('static',filename='images/'+t.photo) }}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--accent)">
+      {% else %}<div style="width:30px;height:30px;border-radius:50%;background:var(--accent-glow);border:1px solid rgba(240,180,41,.25);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);font-size:.82rem">{{ t.name[0] }}</div>{% endif %}
+      <span style="font-weight:600;color:var(--white)">{{ t.name }}</span></div></td>
+    <td><span class="badge badge-blue">{{ t.designation }}</span></td><td><span class="badge badge-gold">{{ t.subject }}</span></td>
+    <td style="font-size:.79rem">{{ t.qualification or '—' }}</td><td style="font-size:.79rem">{{ t.experience or '—' }}</td>
+    <td><a href="{{ url_for('admin_delete_teacher',i=t.id) }}" class="btn-danger" onclick="return confirm('Remove?')">🗑</a></td></tr>
+    {% else %}<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px">No teachers yet.</td></tr>{% endfor %}
+  </tbody></table></div></div></div>{% endblock %}

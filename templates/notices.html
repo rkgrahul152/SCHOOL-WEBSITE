@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% block title %}Notices – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="page-hero-content">
+  <div class="breadcrumb"><a href="/">Home</a><span>›</span><span>Notices</span></div>
+  <h1>Notices & <span style="color:var(--accent)">Announcements</span></h1>
+  <p>Stay updated with the latest school circulars and announcements</p>
+</div></div>
+<section class="section"><div class="container" style="max-width:860px">
+  <div class="gallery-filter">
+    <button class="filter-btn active" onclick="filterNotices('all',this)">All</button>
+    {% for cat in ['Examination','Events','Holiday','Meeting','Academic','Sports'] %}
+    <button class="filter-btn" onclick="filterNotices('{{ cat }}',this)">{{ cat }}</button>{% endfor %}
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    {% for n in notices %}
+    <div class="glass-card notice-filterable" style="padding:20px 24px;border-left:3px solid {% if n.is_urgent %}var(--c-red){% else %}rgba(240,180,41,.3){% endif %}" data-cat="{{ n.category }}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div>
+          {% if n.is_urgent %}<span class="badge badge-red" style="margin-bottom:6px">🔴 URGENT</span> {% endif %}
+          <span class="badge badge-gold" style="margin-bottom:7px">{{ n.category }}</span>
+          <h3 style="font-size:.95rem;color:var(--white);margin-bottom:6px">{{ n.title }}</h3>
+          <p style="font-size:.84rem;color:var(--text-muted);line-height:1.65">{{ n.content }}</p>
+        </div>
+        <div style="font-size:.71rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0">{{ n.created_at[:10] if n.created_at else '' }}</div>
+      </div>
+    </div>
+    {% else %}<div class="glass-card" style="padding:50px;text-align:center"><div style="font-size:2.8rem;margin-bottom:12px">📢</div><p style="color:var(--text-muted)">No notices at this time.</p></div>{% endfor %}
+  </div>
+</div></section>{% endblock %}

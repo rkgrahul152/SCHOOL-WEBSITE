@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – {{ session.student_name }}{% endblock %}
+{% block extra_css %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>{% endblock %}
+{% block content %}
+<div class="dash-wrap">
+  <!-- ═══ SIDEBAR ═══════════════════════════════════════ -->
+  <aside class="dash-sidebar" id="dashSidebar">
+    <div class="sb-profile">
+      <div class="sb-avatar-wrap">
+        <div class="sb-avatar">{{ session.student_name[0] }}</div>
+        <div>
+          <div class="sb-name">{{ session.student_name }}</div>
+          <div class="sb-class">Class {{ session.student_class }} – {{ session.student_section }}</div>
+        </div>
+      </div>
+      <div class="sb-badge">Roll No. {{ session.student_roll }}</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-item active" data-panel="p-overview"><span class="icon">🏠</span> Dashboard</div>
+      <div class="sb-item" data-panel="p-attendance"><span class="icon">📅</span> Attendance</div>
+      <div class="sb-item" data-panel="p-homework"><span class="icon">📋</span> Homework{% if assignments %}<span class="count">{{ assignments|length }}</span>{% endif %}</div>
+      <div class="sb-item" data-panel="p-materials"><span class="icon">📚</span> Study Materials</div>
+      <div class="sb-item" data-panel="p-routine"><span class="icon">🕐</span> Class Routine</div>
+      <div class="sb-item" data-panel="p-results"><span class="icon">📊</span> Results</div>
+      <div class="sb-item" data-panel="p-notices"><span class="icon">📢</span> Notices{% if notices %}<span class="count">{{ notices|selectattr('is_urgent')|list|length }}</span>{% endif %}</div>
+      <div class="sb-divider"></div>
+      <a href="{{ url_for('index') }}" class="sb-item"><span class="icon">⚙️</span> Settings</a>
+      <a href="{{ url_for('student_logout') }}" class="sb-item" style="color:#fca5a5!important"><span class="icon">🚪</span> Logout</a>
+    </nav>
+  </aside>
+
+  <!-- ═══ MAIN ══════════════════════════════════════════ -->
+  <div class="dash-main">
+    <div class="dash-header">
+      <div>
+        <button id="dashToggle" style="display:none;padding:6px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--accent);border-radius:var(--rs);font-weight:700;font-family:var(--fb);margin-bottom:10px">☰</button>
+        <div class="dash-title">Student Dashboard</div>
+        <div class="dash-subtitle" id="currentDate"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="text-align:right">
+          <div style="font-weight:700;color:var(--white);font-size:.88rem">{{ session.student_name }}</div>
+          <div style="font-size:.72rem;color:var(--text-muted)">Class {{ session.student_class }} – {{ session.student_section }}</div>
+        </div>
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--accent-glow);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:.95rem;color:var(--accent)">{{ session.student_name[0] }}</div>
+      </div>
+    </div>
+
+    <!-- OVERVIEW PANEL -->
+    <div class="dash-panel active" id="p-overview">
+      <!-- 4 stat cards -->
+      <div class="stat-cards-row">
+        <div class="sc green">
+          <div class="sc-icon">📅</div>
+          <div><div class="sc-val">{{ att_pct }}%</div><div class="sc-lbl">Attendance</div><div class="sc-sub">This Month</div></div>
+        </div>
+        <div class="sc orange">
+          <div class="sc-icon">📋</div>
+          <div><div class="sc-val">{{ assignments|length }}</div><div class="sc-lbl">Homework</div><div class="sc-sub">Pending</div></div>
+        </div>
+        <div class="sc purple">
+          <div class="sc-icon">📝</div>
+          <div><div class="sc-val">2</div><div class="sc-lbl">Upcoming Exams</div><div class="sc-sub">Next 15 Days</div></div>
+        </div>
+        <div class="sc blue">
+          <div class="sc-icon">🏆</div>
+          {% set avg = ((results|sum(attribute='marks_obtained') / results|sum(attribute='total_marks')) * 100)|round(0)|int if results and results|sum(attribute='total_marks') > 0 else 0 %}
+          <div><div class="sc-val">{{ 'A+' if avg>=85 else 'A' if avg>=75 else 'B+' if avg>=65 else 'B' if avg>=55 else 'C' }}</div><div class="sc-lbl">Overall Grade</div><div class="sc-sub">Excellent</div></div>
+        </div>
+      </div>
+
+      <!-- Attendance Overview + Recent Homework -->
+      <div class="grid-2" style="gap:18px;margin-bottom:18px">
+        <div class="glass-card" style="padding:18px">
+          <div class="panel-title">📊 Attendance Overview <span style="font-size:.72rem;color:var(--text-muted)">May 2025</span></div>
+          <div class="att-overview">
+            <div style="text-align:center">
+              <canvas id="attCircle" width="130" height="130"></canvas>
+              <div class="att-counts">
+                <div class="att-count-item"><div class="att-dot" style="background:var(--c-green)"></div><span style="color:var(--text-muted)">Present:</span> <strong style="color:var(--white)">{{ present }}</strong></div>
+                <div class="att-count-item"><div class="att-dot" style="background:var(--c-red)"></div><span style="color:var(--text-muted)">Absent:</span> <strong style="color:var(--white)">{{ total - present }}</strong></div>
+                <div class="att-count-item"><div class="att-dot" style="background:var(--c-orange)"></div><span style="color:var(--text-muted)">Leave:</span> <strong style="color:var(--white)">{{ attendance|selectattr('status','equalto','Leave')|list|length }}</strong></div>
+              </div>
+            </div>
+            <div>
+              <div class="chart-box" style="height:160px"><canvas id="attBarChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding:18px">
+          <div class="panel-title">📋 Recent Homework <a href="#" onclick="document.querySelector('[data-panel=p-homework]').click()">View All</a></div>
+          {% for a in assignments[:4] %}
+          <div class="hw-item">
+            <div class="hw-subject" style="background:{% if loop.index==1 %}var(--c-blue){% elif loop.index==2 %}var(--c-purple){% elif loop.index==3 %}var(--c-green){% else %}var(--c-orange){% endif %}"></div>
+            <div style="flex:1;min-width:0">
+              <div class="hw-title">{{ a.title }}</div>
+              <div class="hw-sub">{{ a.subject }}{% if a.due_date %} · Due: {{ a.due_date }}{% endif %}</div>
+            </div>
+            <div class="hw-badge"><span class="status-badge pending">Pending</span></div>
+          </div>
+          {% else %}
+          <p style="color:var(--text-muted);font-size:.83rem;padding:20px 0;text-align:center">No homework assigned.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Class Routine + Latest Notices -->
+      <div class="grid-2" style="gap:18px">
+        <div class="glass-card" style="padding:18px">
+          <div class="panel-title">🕐 Class Routine – Today</div>
+          {% if routines %}
+          {% set today_days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] %}
+          {% set today_rout = routines|selectattr('day','equalto',today_days[now.weekday() if now.weekday() < 6 else 0])|list %}
+          {% set show_rout = today_rout if today_rout else routines[:5] %}
+          <table class="tt-today">
+            <thead><tr><th>Period</th><th>Time</th><th>Subject</th><th>Teacher</th><th>Room</th></tr></thead>
+            <tbody>
+              {% for r in show_rout[:6] %}
+              <tr>
+                <td><span class="period-badge">{{ r.period }}</span></td>
+                <td style="font-size:.78rem;color:var(--text-muted)">{{ r.time_slot or '—' }}</td>
+                <td><span class="subject-color" style="background:{% if loop.index==1 %}var(--c-blue){% elif loop.index==2 %}var(--c-green){% elif loop.index==3 %}var(--c-orange){% elif loop.index==4 %}var(--c-purple){% else %}var(--c-teal){% endif %}"></span>{{ r.subject }}</td>
+                <td style="font-size:.78rem">{{ r.teacher or '—' }}</td>
+                <td><span class="room-badge">Room {{ 200 + loop.index }}</span></td>
+              </tr>{% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div style="text-align:center;padding:24px;color:var(--text-muted)">No timetable published.</div>
+          {% endif %}
+        </div>
+
+        <div class="glass-card" style="padding:18px">
+          <div class="panel-title">📢 Latest Notices <a href="{{ url_for('notices') }}">View All</a></div>
+          {% for n in notices[:4] %}
+          <div class="hw-item">
+            <div style="width:8px;height:8px;border-radius:50%;background:{% if n.is_urgent %}var(--c-red){% else %}var(--accent){% endif %};flex-shrink:0;margin-top:7px"></div>
+            <div style="flex:1;min-width:0">
+              <div class="hw-title">{{ n.title }}</div>
+              <div class="hw-sub">{{ n.category }} · {{ n.created_at[:10] if n.created_at else '' }}</div>
+            </div>
+          </div>{% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ATTENDANCE PANEL -->
+    <div class="dash-panel" id="p-attendance">
+      <div class="panel-title">📅 Attendance Record</div>
+      <div class="stat-cards-row">
+        <div class="sc green"><div class="sc-icon">📅</div><div><div class="sc-val">{{ total }}</div><div class="sc-lbl">Total Days</div></div></div>
+        <div class="sc blue"><div class="sc-icon">✅</div><div><div class="sc-val" style="color:var(--c-green)">{{ present }}</div><div class="sc-lbl">Present</div></div></div>
+        <div class="sc red"><div class="sc-icon">❌</div><div><div class="sc-val">{{ total - present }}</div><div class="sc-lbl">Absent</div></div></div>
+        <div class="sc orange"><div class="sc-icon">📊</div><div><div class="sc-val">{{ att_pct }}%</div><div class="sc-lbl">Percentage</div></div></div>
+      </div>
+      {% if attendance %}
+      <div style="overflow-x:auto;border-radius:var(--r);border:1px solid rgba(255,255,255,.07)">
+        <table class="result-table"><thead><tr><th>#</th><th>Date</th><th>Status</th></tr></thead><tbody>
+          {% for a in attendance %}<tr><td>{{ loop.index }}</td><td>{{ a.date }}</td>
+          <td><span class="badge {{'badge-green' if a.status=='Present' else 'badge-red' if a.status=='Absent' else 'badge-gold'}}">{{ a.status }}</span></td></tr>{% endfor %}
+        </tbody></table>
+      </div>{% else %}
+      <div class="glass-card" style="padding:36px;text-align:center"><p style="color:var(--text-muted)">No attendance records yet.</p></div>{% endif %}
+    </div>
+
+    <!-- HOMEWORK PANEL -->
+    <div class="dash-panel" id="p-homework">
+      <div class="panel-title">📋 My Homework & Assignments</div>
+      {% if assignments %}
+      <div style="display:flex;flex-direction:column;gap:11px">
+        {% for a in assignments %}
+        <div class="glass-card" style="padding:16px 20px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-weight:700;color:var(--white);margin-bottom:3px">{{ a.title }}</div>
+              <div style="font-size:.78rem;color:var(--accent)">{{ a.subject }}</div>
+              {% if a.description %}<div style="font-size:.82rem;color:var(--text-muted);margin-top:5px">{{ a.description }}</div>{% endif %}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+              {% if a.due_date %}<span class="badge badge-red">📅 Due: {{ a.due_date }}</span>{% endif %}
+              <span class="status-badge pending">Pending</span>
+              {% if a.file_path %}<a href="{{ url_for('static',filename='images/'+a.file_path) }}" class="btn-outline" style="font-size:.74rem;padding:4px 12px" download>⬇ Download</a>{% endif %}
+            </div>
+          </div>
+        </div>{% endfor %}
+      </div>{% else %}
+      <div class="glass-card" style="padding:40px;text-align:center"><p style="color:var(--text-muted)">No assignments posted.</p></div>{% endif %}
+    </div>
+
+    <!-- STUDY MATERIALS PANEL -->
+    <div class="dash-panel" id="p-materials">
+      <div class="panel-title">📚 Study Materials</div>
+      {% if materials %}
+      <div class="grid-3" style="gap:14px">
+        {% for m in materials %}
+        <div class="glass-card" style="padding:18px">
+          <div style="font-size:1.8rem;margin-bottom:9px">📄</div>
+          <div style="font-weight:700;color:var(--white);margin-bottom:3px">{{ m.title }}</div>
+          <div style="font-size:.75rem;color:var(--accent);margin-bottom:8px">{{ m.subject }}</div>
+          {% if m.file_path %}<a href="{{ url_for('static',filename='images/'+m.file_path) }}" class="btn-outline" style="font-size:.75rem;padding:5px 12px" download>⬇ Download PDF</a>{% endif %}
+        </div>{% endfor %}
+      </div>{% else %}
+      <div class="glass-card" style="padding:40px;text-align:center"><p style="color:var(--text-muted)">No materials uploaded yet.</p></div>{% endif %}
+    </div>
+
+    <!-- ROUTINE PANEL -->
+    <div class="dash-panel" id="p-routine">
+      <div class="panel-title">🕐 Full Class Timetable</div>
+      {% if routines %}
+      {% set days=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] %}
+      {% set periods=routines|map(attribute='period')|list|unique|sort|list %}
+      <div style="overflow-x:auto">
+        <table class="result-table" style="min-width:600px">
+          <thead><tr><th>Day</th>{% for p in periods %}<th>P{{ p }}</th>{% endfor %}</tr></thead>
+          <tbody>{% for day in days %}<tr>
+            <td style="font-weight:700;color:var(--accent)">{{ day[:3] }}</td>
+            {% for p in periods %}{% set cell=routines|selectattr('day','equalto',day)|selectattr('period','equalto',p)|first %}
+            <td>{% if cell %}<div style="font-weight:600;font-size:.8rem">{{ cell.subject }}</div>{% if cell.time_slot %}<div style="font-size:.66rem;color:var(--text-muted)">{{ cell.time_slot }}</div>{% endif %}{% if cell.teacher %}<div style="font-size:.66rem;color:var(--accent)">{{ cell.teacher }}</div>{% endif %}{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td>
+            {% endfor %}
+          </tr>{% endfor %}</tbody>
+        </table>
+      </div>{% else %}
+      <div class="glass-card" style="padding:40px;text-align:center"><p style="color:var(--text-muted)">Timetable not yet published.</p></div>{% endif %}
+    </div>
+
+    <!-- RESULTS PANEL -->
+    <div class="dash-panel" id="p-results">
+      <div class="panel-title">📊 My Results</div>
+      {% if results %}
+      <div style="overflow-x:auto;border-radius:var(--r);border:1px solid rgba(255,255,255,.07)">
+        <table class="result-table"><thead><tr><th>Exam</th><th>Subject</th><th>Marks</th><th>Total</th><th>%</th><th>Grade</th></tr></thead>
+        <tbody>{% for r in results %}{% set g=r.grade or '' %}{% set sp=((r.marks_obtained/r.total_marks)*100)|round(1) if r.total_marks else 0 %}
+          <tr><td style="font-size:.79rem">{{ r.exam_name }}</td><td style="font-weight:600">{{ r.subject }}</td>
+          <td style="font-weight:700;color:var(--accent)">{{ r.marks_obtained|int }}</td><td>{{ r.total_marks|int }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">{{ sp }}%
+              <div style="flex:1;height:4px;background:rgba(255,255,255,.07);border-radius:2px;min-width:36px"><div style="height:100%;width:{{ sp }}%;border-radius:2px;background:{% if sp>=75 %}#10b981{% elif sp>=50 %}#f59e0b{% else %}#ef4444{% endif %}"></div></div>
+            </div>
+          </td>
+          <td><span class="grade-badge grade-{{ 'A' if g.startswith('A') else 'B' if g.startswith('B') else 'C' }}">{{ g or '—' }}</span></td>
+          </tr>{% endfor %}
+        </tbody></table>
+      </div>{% else %}
+      <div class="glass-card" style="padding:40px;text-align:center"><p style="color:var(--text-muted)">No results yet.</p></div>{% endif %}
+    </div>
+
+    <!-- NOTICES PANEL -->
+    <div class="dash-panel" id="p-notices">
+      <div class="panel-title">📢 School Notices</div>
+      <div style="display:flex;flex-direction:column;gap:11px">
+        {% for n in notices %}
+        <div class="glass-card" style="padding:16px 20px;border-left:3px solid {{ 'var(--c-red)' if n.is_urgent else 'rgba(240,180,41,.3)' }}">
+          {% if n.is_urgent %}<span class="badge badge-red" style="margin-bottom:6px">🔴 URGENT</span>{% endif %}
+          <span class="badge badge-gold" style="margin-bottom:7px">{{ n.category }}</span>
+          <div style="font-weight:700;color:var(--white);margin-bottom:5px">{{ n.title }}</div>
+          <div style="font-size:.83rem;color:var(--text-muted)">{{ n.content }}</div>
+          <div style="font-size:.71rem;color:var(--text-muted);margin-top:7px">{{ n.created_at[:10] if n.created_at else '' }}</div>
+        </div>{% endfor %}
+      </div>
+    </div>
+
+  </div><!-- /dash-main -->
+</div>
+
+{% raw %}<style>@media(max-width:768px){#dashToggle{display:block!important}}</style>{% endraw %}
+
+{% block extra_js %}
+<script>
+window.addEventListener('load', function() {
+  initDashCharts({{ att_pct }}, {{ present }}, {{ total }});
+});
+</script>
+{% endblock %}
+{% endblock %}

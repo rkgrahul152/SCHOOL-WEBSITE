@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% block title %}Gallery – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="page-hero-content">
+  <div class="breadcrumb"><a href="/">Home</a><span>›</span><span>Gallery</span></div>
+  <h1>Photo <span style="color:var(--accent)">Gallery</span></h1>
+  <p>Capturing memories of academic excellence and school life</p>
+</div></div>
+<section class="section"><div class="container">
+  <div class="gallery-filter">
+    <button class="filter-btn active" data-filter="all">All Photos</button>
+    {% for cat in categories %}<button class="filter-btn" data-filter="{{ cat }}">{{ cat }}</button>{% endfor %}
+  </div>
+  {% if all_items %}
+  <div class="gallery-masonry">
+    {% for item in all_items %}
+    <div class="masonry-item" data-cat="{{ item.category }}">
+      <img src="{{ url_for('static',filename='images/'+item.image_path) }}" alt="{{ item.title }}" loading="lazy">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(7,15,30,.9),transparent);padding:10px;opacity:0;transition:opacity .3s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
+        <span style="font-size:.74rem;font-weight:600;color:var(--white)">{{ item.title }}</span><br>
+        <span style="font-size:.64rem;color:var(--accent)">{{ item.category }}</span>
+      </div>
+    </div>{% endfor %}
+  </div>
+  {% else %}
+  <div class="glass-card" style="padding:50px;text-align:center"><div style="font-size:2.8rem;margin-bottom:12px">📸</div>
+    <p style="color:var(--text-muted)">Photos will appear here once uploaded by Admin.</p>
+    <a href="{{ url_for('admin_login') }}" style="color:var(--accent);font-size:.83rem;margin-top:8px;display:inline-block">Login to Admin Panel →</a>
+  </div>{% endif %}
+</div></section>{% endblock %}

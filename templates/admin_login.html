@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Admin Login – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="login-page">
+  <div class="login-card">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="width:64px;height:64px;background:rgba(240,180,41,.1);border:2px solid rgba(240,180,41,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 12px">🛡️</div>
+      <div class="login-title">Admin Login</div>
+      <div class="login-sub">{{ settings.school_name }}</div>
+    </div>
+    <div class="login-divider"></div>
+    <form method="POST" style="display:flex;flex-direction:column;gap:12px">
+      <div class="form-group"><label>👤 Username</label><input type="text" name="username" class="form-control" placeholder="Admin username" required autocomplete="username"></div>
+      <div class="form-group"><label>🔒 Password</label><input type="password" name="password" class="form-control" placeholder="••••••••••" required autocomplete="current-password"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:.75rem;color:var(--text-muted)">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" style="accent-color:var(--accent)"> Remember Me</label>
+        <span style="color:var(--accent)">Forgot Password?</span>
+      </div>
+      <button type="submit" class="btn-gold" style="padding:11px;font-size:.92rem;margin-top:4px">🔐 Login</button>
+    </form>
+    <div style="text-align:center;margin-top:12px"><a href="{{ url_for('index') }}" style="font-size:.79rem;color:var(--accent)">← Back to Website</a></div>
+    <div style="margin-top:14px;padding:10px 12px;background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.18);border-radius:var(--rs);font-size:.72rem;color:var(--text-muted)">
+      <strong style="color:var(--accent)">Demo:</strong> User: <code style="color:var(--white)">admin</code> · Pass: <code style="color:var(--white)">admin123</code>
+    </div>
+  </div>
+</div>{% endblock %}
