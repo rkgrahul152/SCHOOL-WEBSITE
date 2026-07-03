@@ -307,6 +307,60 @@
   </div>
 </section>{% endif %}
 
+<!-- ═══ VIDEO DOOR REVEAL ══════════════════════════════════════════ -->
+<section class="section section-dark video-reveal-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Experience Our School</span>
+      <h2 class="section-title">{{ settings.video_section_title or 'Watch Our School Film' }}</h2>
+      <div class="divider"></div>
+      <p class="section-desc">Click the doors to step inside {{ settings.school_name }}</p>
+    </div>
+
+    <div class="video-door-wrap reveal" id="videoDoorWrap">
+      <div class="video-stage">
+        {% if settings.school_video %}
+          <video id="schoolVideo" class="video-el" playsinline preload="metadata">
+            <source src="{{ url_for('static',filename='videos/'+settings.school_video) }}" type="video/mp4">
+          </video>
+        {% elif yt_id %}
+          <iframe id="schoolVideoFrame" class="video-el" data-src="https://www.youtube.com/embed/{{ yt_id }}?autoplay=1&rel=0"
+                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        {% else %}
+          <div class="video-el video-placeholder">
+            <div>🎬<br><span>School video coming soon</span></div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Door panels -->
+      <div class="door door-left" id="doorLeft">
+        <div class="door-panel-inner">
+          <div class="door-grain"></div>
+          <div class="door-handle"></div>
+        </div>
+      </div>
+      <div class="door door-right" id="doorRight">
+        <div class="door-panel-inner">
+          <div class="door-grain"></div>
+          <div class="door-handle"></div>
+        </div>
+      </div>
+
+      <!-- Center seal / play button -->
+      <button class="door-play-btn" id="doorPlayBtn" aria-label="Play school video">
+        <span class="play-glow"></span>
+        <span class="play-ring"></span>
+        <span class="play-icon">▶</span>
+        <span class="play-label">Watch School Film</span>
+      </button>
+
+      <!-- Replay control (shown after opening) -->
+      <button class="door-replay-btn" id="doorReplayBtn" title="Close doors">✕</button>
+    </div>
+  </div>
+</section>
+
 <!-- ═══ BOTTOM STATS ROW (dynamic from settings) ══════════════════ -->
 <div class="stats-row">
   <div class="stat-row-item reveal"><div class="stat-row-icon">🎓</div><div class="stat-row-val">{{ settings.stat1_val or '800+' }}</div><div class="stat-row-lbl">{{ settings.stat1_label or 'Students' }}</div></div>
@@ -322,5 +376,48 @@
 {% if settings.facebook_url %}
 <a href="{{ settings.facebook_url }}" target="_blank" style="position:fixed;bottom:136px;right:20px;width:46px;height:46px;background:#1877f2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 4px 16px rgba(24,119,242,.4);z-index:400;transition:transform .2s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">📘</a>
 {% endif %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const wrap = document.getElementById('videoDoorWrap');
+  if(!wrap) return;
+  const playBtn   = document.getElementById('doorPlayBtn');
+  const replayBtn = document.getElementById('doorReplayBtn');
+  const video     = document.getElementById('schoolVideo');
+  const iframe    = document.getElementById('schoolVideoFrame');
+
+  function openDoors(){
+    if(wrap.classList.contains('opened')) return;
+    wrap.classList.add('opened');
+    // Start playback partway through the door swing for a cinematic reveal
+    setTimeout(()=>{
+      if(video){ try{ video.currentTime = 0; video.play(); }catch(e){} }
+      if(iframe && iframe.dataset.src && !iframe.src){ iframe.src = iframe.dataset.src; }
+    }, 650);
+  }
+  function closeDoors(){
+    wrap.classList.remove('opened');
+    if(video){ video.pause(); }
+    if(iframe){ iframe.src = ''; }
+  }
+
+  playBtn?.addEventListener('click', openDoors);
+  wrap.addEventListener('click', (e)=>{
+    // Clicking anywhere on the closed doors opens them too
+    if(!wrap.classList.contains('opened') && e.target !== replayBtn) openDoors();
+  });
+  replayBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); closeDoors(); });
+
+  // Pause the video automatically if the user scrolls it out of view while playing
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(!entry.isIntersecting && video && !video.paused){ video.pause(); }
+    });
+  }, { threshold: 0.15 });
+  io.observe(wrap);
+})();
+</script>
+{% endblock %}
 
 {% endblock %}

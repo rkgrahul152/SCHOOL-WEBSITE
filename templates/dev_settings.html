@@ -1,0 +1,37 @@
+{% extends "dev_base.html" %}
+{% block title %}Dev Settings{% endblock %}
+{% block dev_content %}
+<div class="dev-topbar"><div><div class="dev-page-title">⚙️ Developer Settings</div>
+<div class="dev-page-sub">Update your developer account credentials</div></div></div>
+<div class="dev-card"><div class="dev-card-head"><div class="dev-card-title">👨‍💻 Developer Account</div></div>
+  <div class="dev-card-body">
+    <form method="POST" action="{{ url_for('dev_settings') }}">
+      <div class="form-grid">
+        <div class="form-group"><label>Full Name</label><input type="text" name="name" class="form-control" value="{{ dev.name }}"></div>
+        <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control" value="{{ dev.email or '' }}"></div>
+        <div class="form-group"><label>New Password (leave blank to keep current)</label><input type="password" name="new_password" class="form-control" placeholder="New secure password..."></div>
+      </div>
+      <div style="margin-top:14px"><button type="submit" style="padding:10px 24px;border-radius:var(--rs);background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;font-weight:800;border:none;cursor:pointer;font-family:var(--fb)">💾 Save Settings</button></div>
+    </form>
+    <div style="margin-top:20px;padding:14px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);border-radius:var(--rs)">
+      <div style="font-size:.8rem;font-weight:700;color:#fca5a5;margin-bottom:6px">🔐 Default Credentials (change before deploying live)</div>
+      <div style="font-size:.74rem;color:var(--text-muted)">Username: <code style="color:var(--white)">developer</code> · Password: <code style="color:var(--white)">dev@rgl2024</code></div>
+    </div>
+  </div>
+</div>
+<div class="dev-card"><div class="dev-card-head"><div class="dev-card-title">🔑 Role Hierarchy</div></div>
+  <div class="dev-card-body">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      {% for role,color,icon,desc in [
+        ('Developer','rgba(239,68,68,.15)','👨‍💻','Full system access · Create/delete admins · All settings · DB tools · Activity logs'),
+        ('Admin','rgba(99,102,241,.15)','🛡️','Manages school content · Notices, Results, Students, Teachers, Gallery, etc.'),
+        ('Teacher','rgba(16,185,129,.15)','👨‍🏫','Restricted access · Only assigned class-sections · Attendance, Assignments, Materials'),
+      ] %}
+      <div style="padding:13px 16px;background:{{ color }};border-radius:var(--rs);border:1px solid rgba(255,255,255,.08)">
+        <div style="font-weight:700;color:var(--white);margin-bottom:3px">{{ icon }} {{ role }}</div>
+        <div style="font-size:.77rem;color:var(--text-muted)">{{ desc }}</div>
+      </div>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

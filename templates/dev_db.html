@@ -1,0 +1,44 @@
+{% extends "dev_base.html" %}
+{% block title %}Database Tools{% endblock %}
+{% block dev_content %}
+<div class="dev-topbar"><div><div class="dev-page-title">🗄️ Database Tools</div>
+<div class="dev-page-sub">SQLite WAL mode · 16 indexes · Production-ready</div></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+  <div class="dev-card"><div class="dev-card-head"><div class="dev-card-title">📊 Table Record Counts</div></div>
+    <div class="dev-card-body" style="padding:0"><table class="admin-table dev-table"><thead><tr><th>Table</th><th>Records</th><th>Status</th></tr></thead><tbody>
+      {% for t,cnt in tables.items() %}
+      <tr><td style="font-weight:600;color:var(--white)">{{ t }}</td>
+          <td style="font-weight:700;color:#a5b4fc">{{ "{:,}".format(cnt) }}</td>
+          <td><span class="badge {{ 'badge-green' if cnt>0 else 'badge-gold' }}">{{ 'Has Data' if cnt>0 else 'Empty' }}</span></td>
+      </tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+  <div class="dev-card"><div class="dev-card-head"><div class="dev-card-title">⚡ Active Indexes ({{ indexes|length }})</div></div>
+    <div class="dev-card-body" style="padding:0"><table class="admin-table dev-table"><thead><tr><th>Index Name</th><th>Table</th></tr></thead><tbody>
+      {% for idx in indexes %}
+      <tr><td style="font-size:.77rem;color:#a5b4fc">{{ idx.name }}</td><td style="font-size:.77rem">{{ idx.tbl_name }}</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+  </div>
+</div>
+<div class="dev-card"><div class="dev-card-head"><div class="dev-card-title">🛠️ Database Operations</div></div>
+  <div class="dev-card-body">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <a href="{{ url_for('dev_vacuum') }}" class="btn-gold" onclick="return confirm('Vacuum database? May take a moment for large DBs.')">🧹 Vacuum & Optimize</a>
+      <a href="{{ url_for('dev_backup') }}" class="btn-outline" style="padding:9px 18px;border-color:rgba(99,102,241,.3);color:#818cf8">💾 Download Backup (.db)</a>
+    </div>
+    <div style="padding:12px 14px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:var(--rs)">
+      <div style="font-size:.78rem;color:#6ee7b7;font-weight:700;margin-bottom:6px">✅ Active Performance Features</div>
+      <div style="font-size:.74rem;color:var(--text-muted);line-height:1.8">
+        • WAL mode (Write-Ahead Logging) — multiple concurrent readers<br>
+        • 32MB query cache + 256MB memory-mapped I/O<br>
+        • 12 custom indexes on all critical lookup columns<br>
+        • Admin table pagination (50 rows/page)<br>
+        • Settings in-memory cache (5 min TTL)<br>
+        • Bulk CSV import for students &amp; results<br>
+        • Bulk class-wide attendance marking
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

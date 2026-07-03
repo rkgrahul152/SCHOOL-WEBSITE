@@ -1,0 +1,63 @@
+{% extends "dev_base.html" %}
+{% block title %}Global Search{% endblock %}
+{% block dev_content %}
+<div class="dev-topbar"><div><div class="dev-page-title">🔍 Global Search</div>
+<div class="dev-page-sub">Search students, teachers, and admins across the whole database</div></div></div>
+
+<div class="dev-card">
+  <div class="dev-card-body">
+    <form method="GET" style="display:flex;gap:8px">
+      <input type="text" name="q" class="form-control" placeholder="Search by name, roll number, or subject..." value="{{ query }}" autofocus style="border-color:rgba(99,102,241,.25)">
+      <button type="submit" style="padding:8px 22px;border-radius:var(--rs);background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;font-weight:700;border:none;cursor:pointer;font-family:var(--fb)">🔍 Search</button>
+    </form>
+  </div>
+</div>
+
+{% if query %}
+{% set total_found = results.students|length + results.teachers|length + results.admins|length %}
+<div style="font-size:.82rem;color:#818cf8;margin-bottom:14px">
+  {{ total_found }} result{{ 's' if total_found != 1 else '' }} found for "<strong style="color:var(--white)">{{ query }}</strong>"
+</div>
+
+{% if results.students %}
+<div class="dev-card search-reveal">
+  <div class="dev-card-head"><div class="dev-card-title">🎓 Students ({{ results.students|length }})</div></div>
+  <div class="dev-card-body" style="padding:0"><table class="admin-table dev-table"><thead><tr><th>Roll</th><th>Name</th><th>Class</th><th>Section</th><th>Guardian</th></tr></thead><tbody>
+    {% for s in results.students %}<tr><td style="font-weight:700;color:#a5b4fc">{{ s.roll_number }}</td><td style="font-weight:600;color:var(--white)">{{ s.name }}</td><td>{{ s.class }}</td><td><span class="badge badge-gold">{{ s.section }}</span></td><td style="font-size:.79rem">{{ s.guardian or '—' }}</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>{% endif %}
+
+{% if results.teachers %}
+<div class="dev-card search-reveal">
+  <div class="dev-card-head"><div class="dev-card-title">👨‍🏫 Teachers ({{ results.teachers|length }})</div></div>
+  <div class="dev-card-body" style="padding:0"><table class="admin-table dev-table"><thead><tr><th>Name</th><th>Designation</th><th>Subject</th><th>Phone</th></tr></thead><tbody>
+    {% for t in results.teachers %}<tr><td style="font-weight:600;color:var(--white)">{{ t.name }}</td><td><span class="badge badge-blue">{{ t.designation }}</span></td><td><span class="badge badge-gold">{{ t.subject }}</span></td><td style="font-size:.79rem">{{ t.phone or '—' }}</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>{% endif %}
+
+{% if results.admins %}
+<div class="dev-card search-reveal">
+  <div class="dev-card-head"><div class="dev-card-title">🛡️ Admins ({{ results.admins|length }})</div></div>
+  <div class="dev-card-body" style="padding:0"><table class="admin-table dev-table"><thead><tr><th>Username</th><th>Name</th><th>Role</th></tr></thead><tbody>
+    {% for a in results.admins %}<tr><td style="font-weight:700;color:#a5b4fc">@{{ a.username }}</td><td style="color:var(--white)">{{ a.name }}</td><td><span class="role-badge role-{{ a.role or 'admin' }}">{{ a.role or 'admin' }}</span></td></tr>{% endfor %}
+  </tbody></table></div>
+</div>{% endif %}
+
+{% if total_found == 0 %}
+<div class="dev-card"><div class="dev-card-body" style="text-align:center;padding:40px;color:var(--text-muted)">
+  <div style="font-size:2.5rem;margin-bottom:10px">🔍</div>No results found for "{{ query }}"
+</div></div>{% endif %}
+{% else %}
+<div class="dev-card"><div class="dev-card-body" style="text-align:center;padding:40px;color:var(--text-muted)">
+  <div style="font-size:2.5rem;margin-bottom:10px">🔎</div>Type at least 2 characters to search
+</div></div>
+{% endif %}
+
+<style>
+@keyframes searchFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.search-reveal{animation:searchFade .4s ease both}
+.search-reveal:nth-of-type(1){animation-delay:.05s}
+.search-reveal:nth-of-type(2){animation-delay:.12s}
+.search-reveal:nth-of-type(3){animation-delay:.19s}
+</style>
+{% endblock %}

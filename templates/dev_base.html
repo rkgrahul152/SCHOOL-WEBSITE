@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>{% block title %}Developer{% endblock %} – Dev Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% block extra_css %}{% endblock %}
+</head><body>
+{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}
+<div class="flash-wrap">{% for cat,msg in messages %}<div class="flash flash-{{ cat }}"><span>{{ msg }}</span><button onclick="this.parentElement.remove()">✕</button></div>{% endfor %}</div>
+{% endif %}{% endwith %}
+
+<div class="dev-layout">
+  <aside class="dev-sidebar" id="devSidebar">
+    <div class="dev-sb-head">
+      <div class="dev-sb-badge">⚡ Developer Mode</div>
+      <div class="dev-sb-title">{{ settings.school_name[:22] }}</div>
+      <div class="dev-sb-sub">{{ session.dev_name }}</div>
+    </div>
+    <nav class="dev-nav">
+      <div class="dev-nav-grp"><div class="dev-nav-grp-title">Overview</div>
+        <a href="{{ url_for('dev_dashboard') }}" class="dev-nav-item {% if request.endpoint=='dev_dashboard' %}active{% endif %}"><span>🏠</span> Dashboard</a>
+        <a href="{{ url_for('dev_search') }}" class="dev-nav-item {% if request.endpoint=='dev_search' %}active{% endif %}"><span>🔍</span> Global Search</a>
+      </div>
+      <div class="dev-nav-grp"><div class="dev-nav-grp-title">Access Control</div>
+        <a href="{{ url_for('dev_admins') }}" class="dev-nav-item {% if request.endpoint in ['dev_admins','dev_add_admin'] %}active{% endif %}"><span>👥</span> Manage Admins</a>
+        <a href="{{ url_for('dev_logs') }}" class="dev-nav-item {% if request.endpoint=='dev_logs' %}active{% endif %}"><span>📋</span> Activity Logs</a>
+      </div>
+      <div class="dev-nav-grp"><div class="dev-nav-grp-title">System</div>
+        <a href="{{ url_for('dev_system') }}" class="dev-nav-item {% if request.endpoint=='dev_system' %}active{% endif %}"><span>🖥️</span> System Info</a>
+        <a href="{{ url_for('dev_db') }}" class="dev-nav-item {% if request.endpoint=='dev_db' %}active{% endif %}"><span>🗄️</span> Database Tools</a>
+        <a href="{{ url_for('dev_settings') }}" class="dev-nav-item {% if request.endpoint=='dev_settings' %}active{% endif %}"><span>⚙️</span> Dev Settings</a>
+        <a href="{{ url_for('admin_dashboard') }}" class="dev-nav-item"><span>🛡️</span> Admin Panel →</a>
+        <a href="{{ url_for('index') }}" class="dev-nav-item" target="_blank"><span>🌐</span> View Website</a>
+      </div>
+    </nav>
+    <div class="dev-sb-footer">
+      <a href="{{ url_for('dev_logout') }}" style="display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:var(--rs);color:#fca5a5;font-size:.81rem;font-weight:600;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.14)">🚪 Logout</a>
+    </div>
+  </aside>
+  <main class="dev-main">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+      <button id="devToggle" style="display:none;padding:6px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;border-radius:var(--rs);font-weight:700;font-family:var(--fb)">☰ Menu</button>
+      <div style="margin-left:auto;font-size:.76rem;color:#4f46e5" id="currentDate"></div>
+    </div>
+    <div class="dev-page-fade">
+    {% block dev_content %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% raw %}<style>
+@media(max-width:768px){#devToggle{display:block!important}}
+@keyframes devPageFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dev-page-fade{animation:devPageFade .35s ease both}
+</style>{% endraw %}
+<script>
+document.getElementById('devToggle')?.addEventListener('click',()=>document.getElementById('devSidebar')?.classList.toggle('open'));
+const de=document.getElementById('currentDate');
+if(de)de.textContent=new Date().toLocaleDateString('en-IN',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+setTimeout(()=>document.querySelectorAll('.flash').forEach(f=>f.remove()),4000);
+</script>
+{% block extra_js %}{% endblock %}
+</body></html>

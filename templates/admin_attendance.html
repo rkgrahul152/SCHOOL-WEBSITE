@@ -1,27 +1,239 @@
-{% extends "admin_base.html" %}{% block title %}Attendance{% endblock %}
+{% extends "admin_base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block extra_css %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>{% endblock %}
 {% block admin_content %}
-<div class="admin-topbar-row"><div><div class="admin-page-title">✅ Manage Attendance</div><div class="admin-page-sub">Record daily student attendance</div></div></div>
-<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">🔍 Select Class</div></div>
+<div class="admin-topbar-row">
+  <div><div class="admin-page-title">✅ Manage Attendance</div><div class="admin-page-sub">Record daily attendance + view graphs · Class {{ filter_class }}-{{ filter_section }}</div></div>
+</div>
+
+<!-- CLASS SELECTOR -->
+<div class="admin-card" style="margin-bottom:16px"><div class="admin-card-body" style="padding:13px">
+  <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <select name="class" class="form-control" style="width:auto">
+      {% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}" {{ 'selected' if filter_class==c else '' }}>Class {{ c }}</option>{% endfor %}
+    </select>
+    <select name="section" class="form-control" style="width:auto">
+      {% for s in ['A','B','C','D','Science','Arts'] %}<option value="{{ s }}" {{ 'selected' if filter_section==s else '' }}>{{ s }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn-gold btn-sm">🔍 Load Class ({{ students|length }} students)</button>
+  </form>
+</div></div>
+
+<!-- ══ ATTENDANCE GRAPHS ══════════════════════════════════════════ -->
+<div class="att-graph-wrap">
+  <!-- Daily bar chart (last 30 days) -->
+  <div class="att-graph-box">
+    <div class="att-graph-title">
+      <span>📅 Daily Attendance — Last 30 Days</span>
+      <span style="font-size:.68rem;color:var(--text-muted)">Class {{ filter_class }}-{{ filter_section }}</span>
+    </div>
+    <canvas id="dailyAttChart"></canvas>
+  </div>
+  <!-- Weekly trend -->
+  <div class="att-graph-box">
+    <div class="att-graph-title">
+      <span>📈 Weekly Trend</span>
+      <span style="font-size:.68rem;color:var(--text-muted)">Last 8 weeks</span>
+    </div>
+    <canvas id="weeklyAttChart"></canvas>
+  </div>
+</div>
+
+<!-- Overall stat cards + monthly donut -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+  <!-- Overall stats -->
+  <div class="att-graph-box">
+    <div class="att-graph-title"><span>📊 Overall Summary</span></div>
+    <div id="overallStats" style="display:flex;flex-direction:column;gap:10px;margin-top:6px">
+      <div style="color:var(--text-muted);font-size:.8rem;text-align:center;padding:20px">Loading stats…</div>
+    </div>
+  </div>
+  <!-- Per-student attendance % (top 10) -->
+  <div class="att-graph-box">
+    <div class="att-graph-title"><span>👤 Student Attendance %</span><span style="font-size:.66rem;color:var(--text-muted)">Top 15</span></div>
+    <div id="studentAttList" style="max-height:200px;overflow-y:auto">
+      <div style="color:var(--text-muted);font-size:.8rem;text-align:center;padding:20px">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BULK MARK ═══════════════════════════════════════════════════ -->
+<div class="admin-card" style="border-color:rgba(16,185,129,.25)">
+  <div class="admin-card-head" style="background:rgba(16,185,129,.06)">
+    <div class="admin-card-title">⚡ Bulk Mark — Class {{ filter_class }}-{{ filter_section }} ({{ students|length }} students)</div>
+  </div>
   <div class="admin-card-body">
-    <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0">
-      <select name="class" class="form-control" style="width:auto">{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}" {{ 'selected' if filter_class==c else '' }}>Class {{ c }}</option>{% endfor %}</select>
-      <select name="section" class="form-control" style="width:auto">{% for s in ['A','B','C','D','Science','Arts'] %}<option value="{{ s }}" {{ 'selected' if filter_section==s else '' }}>{{ s }}</option>{% endfor %}</select>
-      <button type="submit" class="btn-gold btn-sm">🔍 Load Students</button>
+    <form method="POST" action="{{ url_for('admin_bulk_attendance') }}">
+      <input type="hidden" name="class" value="{{ filter_class }}"><input type="hidden" name="section" value="{{ filter_section }}">
+      <div class="form-grid">
+        <div class="form-group"><label>Date *</label><input type="date" name="date" class="form-control" required value="{{ now.date().isoformat() }}"></div>
+        <div class="form-group"><label>Mark All As *</label>
+          <select name="status" class="form-control">
+            <option value="Present">✅ Present</option>
+            <option value="Absent">❌ Absent</option>
+            <option value="Holiday">🏖️ Holiday</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button type="submit" class="btn-gold" onclick="return confirm('Mark all {{ students|length }} students?')">⚡ Mark All {{ students|length }} Students</button>
+        <span style="font-size:.73rem;color:var(--text-muted)">💡 Mark entire class first, then fix individual absentees below</span>
+      </div>
     </form>
-  </div></div>
-<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">✏️ Mark Attendance — Class {{ filter_class }}-{{ filter_section }}</div></div>
+  </div>
+</div>
+
+<!-- ══ SINGLE STUDENT ══════════════════════════════════════════════ -->
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">✏️ Mark Individual Student</div></div>
   <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_mark_attendance') }}">
     <input type="hidden" name="class" value="{{ filter_class }}"><input type="hidden" name="section" value="{{ filter_section }}">
     <div class="form-grid">
-      <div class="form-group"><label>Student *</label><select name="roll_number" class="form-control" required><option value="">Select Student</option>{% for s in students %}<option value="{{ s.roll_number }}">Roll {{ s.roll_number }} – {{ s.name }}</option>{% endfor %}</select></div>
-      <div class="form-group"><label>Date *</label><input type="date" name="date" class="form-control" required></div>
-      <div class="form-group"><label>Status *</label><select name="status" class="form-control" required><option value="Present">✅ Present</option><option value="Absent">❌ Absent</option><option value="Late">🕐 Late</option><option value="Leave">📋 Leave</option></select></div>
+      <div class="form-group"><label>Student *</label>
+        <select name="roll_number" class="form-control" required>
+          <option value="">Select Student</option>
+          {% for s in students %}<option value="{{ s.roll_number }}">Roll {{ s.roll_number }} – {{ s.name }}</option>{% endfor %}
+        </select></div>
+      <div class="form-group"><label>Date *</label><input type="date" name="date" class="form-control" required value="{{ now.date().isoformat() }}"></div>
+      <div class="form-group"><label>Status *</label>
+        <select name="status" class="form-control" required>
+          <option value="Present">✅ Present</option>
+          <option value="Absent">❌ Absent</option>
+          <option value="Late">🕐 Late</option>
+          <option value="Leave">📋 Leave</option>
+        </select></div>
     </div>
-    <div style="margin-top:13px"><button type="submit" class="btn-gold">✅ Mark Attendance</button></div>
+    <div style="margin-top:12px"><button type="submit" class="btn-gold">✅ Mark Attendance</button></div>
   </form></div></div>
-<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">📋 Recent Records</div></div>
-  <div class="admin-card-body" style="padding:0"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>#</th><th>Roll</th><th>Date</th><th>Status</th></tr></thead><tbody>
-    {% for a in attendance %}<tr><td>{{ loop.index }}</td><td style="font-weight:700;color:var(--accent)">{{ a.roll_number }}</td><td>{{ a.date }}</td>
-    <td>{% if a.status=='Present' %}<span class="badge badge-green">✅ Present</span>{% elif a.status=='Absent' %}<span class="badge badge-red">❌ Absent</span>{% elif a.status=='Late' %}<span class="badge badge-gold">🕐 Late</span>{% else %}<span class="badge badge-blue">{{ a.status }}</span>{% endif %}</td></tr>
-    {% else %}<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px">No records. Select a class above.</td></tr>{% endfor %}
-  </tbody></table></div></div></div>{% endblock %}
+
+<!-- ══ RECORDS TABLE ════════════════════════════════════════════════ -->
+<div class="admin-card"><div class="admin-card-head">
+  <div class="admin-card-title">📋 Recent Records</div>
+  <form method="GET" style="display:flex;gap:6px;align-items:center">
+    <input type="hidden" name="class" value="{{ filter_class }}"><input type="hidden" name="section" value="{{ filter_section }}">
+    <input type="date" name="date" class="form-control" style="width:auto;padding:4px 10px;font-size:.78rem" value="{{ date_filter }}">
+    <button type="submit" class="btn-outline btn-sm">Filter by Date</button>
+    {% if date_filter %}<a href="{{ url_for('admin_attendance',**{'class':filter_class,'section':filter_section}) }}" class="btn-outline btn-sm">Clear</a>{% endif %}
+  </form>
+</div>
+<div class="admin-card-body" style="padding:0"><div class="admin-table-wrap"><table class="admin-table">
+  <thead><tr><th>#</th><th>Roll</th><th>Date</th><th>Status</th></tr></thead><tbody>
+    {% for a in attendance %}
+    <tr><td>{{ loop.index }}</td>
+      <td style="font-weight:700;color:var(--accent)">{{ a.roll_number }}</td>
+      <td>{{ a.date }}</td>
+      <td>{% if a.status=='Present' %}<span class="badge badge-green">✅ Present</span>
+          {% elif a.status=='Absent' %}<span class="badge badge-red">❌ Absent</span>
+          {% elif a.status=='Late' %}<span class="badge badge-gold">🕐 Late</span>
+          {% else %}<span class="badge badge-blue">{{ a.status }}</span>{% endif %}</td>
+    </tr>{% else %}
+    <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px">No records. Select class above and mark attendance.</td></tr>
+    {% endfor %}
+  </tbody></table></div></div></div>
+
+{% block extra_js %}
+<script>
+const cls='{{ filter_class }}', sec='{{ filter_section }}';
+let dailyC, weeklyC;
+
+function loadAttCharts(){
+  fetch(`/admin/attendance/stats?class=${cls}&section=${sec}`)
+    .then(r=>r.json()).then(d=>{
+
+    // ── Daily bar chart ────────────────────────────────
+    if(dailyC) dailyC.destroy();
+    const dc=document.getElementById('dailyAttChart');
+    if(dc && d.daily.labels.length){
+      dailyC=new Chart(dc.getContext('2d'),{
+        type:'bar',
+        data:{labels:d.daily.labels.map(l=>l.slice(5)), // show MM-DD only
+          datasets:[
+            {label:'Present',data:d.daily.present,backgroundColor:'rgba(16,185,129,0.7)',borderRadius:3,borderSkipped:false},
+            {label:'Absent', data:d.daily.absent, backgroundColor:'rgba(239,68,68,0.55)',borderRadius:3,borderSkipped:false},
+          ]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{labels:{color:'#7a9abf',font:{size:10},boxWidth:10}}},
+          scales:{x:{stacked:false,grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'#7a9abf',font:{size:9},maxTicksLimit:10}},
+                  y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a9abf',font:{size:10}},beginAtZero:true}}}
+      });
+    } else if(dc){
+      dc.parentElement.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">No attendance data for last 30 days</div>';
+    }
+
+    // ── Weekly line chart ──────────────────────────────
+    if(weeklyC) weeklyC.destroy();
+    const wc=document.getElementById('weeklyAttChart');
+    if(wc && d.weekly.labels.length){
+      weeklyC=new Chart(wc.getContext('2d'),{
+        type:'line',
+        data:{labels:d.weekly.labels,
+          datasets:[
+            {label:'Present',data:d.weekly.present,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#10b981'},
+            {label:'Absent', data:d.weekly.absent, borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.07)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#ef4444'},
+          ]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{labels:{color:'#7a9abf',font:{size:10},boxWidth:10}}},
+          scales:{x:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'#7a9abf',font:{size:10}}},
+                  y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a9abf',font:{size:10}},beginAtZero:true}}}
+      });
+    } else if(wc){
+      wc.parentElement.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">No weekly data yet</div>';
+    }
+
+    // ── Overall stat cards ─────────────────────────────
+    const ov=d.overall; const box=document.getElementById('overallStats');
+    if(ov && ov.total>0){
+      const pct=((ov.present||0)/(ov.total||1)*100).toFixed(1);
+      box.innerHTML=`
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="padding:10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:8px;text-align:center">
+            <div style="font-family:var(--fd);font-size:1.4rem;color:#10b981">${ov.present||0}</div>
+            <div style="font-size:.68rem;color:var(--text-muted)">Total Present</div>
+          </div>
+          <div style="padding:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;text-align:center">
+            <div style="font-family:var(--fd);font-size:1.4rem;color:#ef4444">${ov.absent||0}</div>
+            <div style="font-size:.68rem;color:var(--text-muted)">Total Absent</div>
+          </div>
+          <div style="padding:10px;background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.2);border-radius:8px;text-align:center">
+            <div style="font-family:var(--fd);font-size:1.4rem;color:var(--accent)">${ov.late||0}</div>
+            <div style="font-size:.68rem;color:var(--text-muted)">Late</div>
+          </div>
+          <div style="padding:10px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:8px;text-align:center">
+            <div style="font-family:var(--fd);font-size:1.4rem;color:#3b82f6">${pct}%</div>
+            <div style="font-size:.68rem;color:var(--text-muted)">Avg Attendance</div>
+          </div>
+        </div>`;
+    } else {
+      box.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-muted)">No attendance records yet</div>';
+    }
+
+    // ── Per-student attendance bars ────────────────────
+    const sl=document.getElementById('studentAttList');
+    if(d.students && d.students.length){
+      sl.innerHTML=d.students.map(s=>{
+        const pct=s.pct||0;
+        const col=pct>=75?'#10b981':pct>=50?'#f59e0b':'#ef4444';
+        return `<div class="student-att-row">
+          <div style="min-width:22px;font-size:.72rem;color:var(--accent);font-weight:700">${s.roll}</div>
+          <div style="flex:1;min-width:0;font-size:.76rem;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+          <div class="att-bar-outer"><div class="att-bar-inner" style="width:${pct}%;background:${col}"></div></div>
+          <div style="min-width:38px;text-align:right;font-size:.72rem;font-weight:700;color:${col}">${pct}%</div>
+        </div>`;
+      }).join('');
+    } else {
+      sl.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-muted)">No data</div>';
+    }
+
+  }).catch(err=>{
+    console.error('Att stats error:',err);
+  });
+}
+
+// Load charts immediately
+loadAttCharts();
+// Reload after class change
+document.querySelector('form[method=GET]')?.addEventListener('submit', ()=>{
+  setTimeout(loadAttCharts, 600);
+});
+</script>
+{% endblock %}
+{% endblock %}

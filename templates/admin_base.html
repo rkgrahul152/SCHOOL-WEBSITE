@@ -9,6 +9,13 @@
 <div class="flash-wrap">{% for cat,msg in messages %}<div class="flash flash-{{ cat }}"><span>{{ msg }}</span><button onclick="this.parentElement.remove()">✕</button></div>{% endfor %}</div>
 {% endif %}{% endwith %}
 
+{% if is_impersonating %}
+<div class="impersonation-banner">
+  <span>👨‍💻 <strong>Developer Mode</strong> — viewing panel as <strong>{{ session.admin_name }}</strong></span>
+  <a href="{{ url_for('dev_exit_impersonation') }}">Exit to Developer Panel →</a>
+</div>
+{% endif %}
+
 <div class="admin-wrap">
   <!-- SIDEBAR -->
   <aside class="admin-sidebar" id="adminSidebar">
@@ -19,34 +26,67 @@
         <div><div class="admin-sb-title">Admin Panel</div><div class="admin-sb-sub">{{ settings.school_name[:20] }}</div></div>
       </div>
       <div class="admin-user">
-        <div class="admin-avatar">A</div>
-        <div><div class="admin-user-name">{{ session.admin_name }}</div><div class="admin-user-role">Administrator</div></div>
+        <div class="admin-avatar">{{ session.admin_name[0] if session.admin_name else 'A' }}</div>
+        <div>
+          <div class="admin-user-name">{{ session.admin_name }}</div>
+          <div class="admin-user-role">
+            {% if current_admin_perms %}
+              {% if current_admin_perms.scope == 'all' %}<span class="scope-chip scope-all">🌐 Full Access</span>
+              {% else %}<span class="scope-chip scope-restricted">🔒 {{ current_admin_perms.classes|length }} Class{{ 'es' if current_admin_perms.classes|length != 1 else '' }}</span>{% endif %}
+            {% else %}Administrator{% endif %}
+          </div>
+        </div>
       </div>
+      {% if current_admin_perms and current_admin_perms.scope == 'restricted' and current_admin_perms.classes %}
+      <div class="assigned-classes">
+        {% for c,s in current_admin_perms.classes %}<span class="mini-badge">{{ c }}-{{ s }}</span>{% endfor %}
+      </div>
+      {% endif %}
     </div>
     <nav class="admin-nav">
       <div class="admin-nav-grp"><div class="admin-nav-grp-title">Overview</div>
         <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item {% if request.endpoint=='admin_dashboard' %}active{% endif %}"><span class="icon">🏠</span> Dashboard</a>
       </div>
       <div class="admin-nav-grp"><div class="admin-nav-grp-title">Manage</div>
-        <a href="{{ url_for('admin_notices') }}" class="admin-nav-item {% if request.endpoint=='admin_notices' %}active{% endif %}"><span class="icon">📢</span> Manage Notices</a>
-        <a href="{{ url_for('admin_results') }}" class="admin-nav-item {% if request.endpoint=='admin_results' %}active{% endif %}"><span class="icon">📊</span> Manage Results</a>
-        <a href="{{ url_for('admin_assignments') }}" class="admin-nav-item {% if request.endpoint=='admin_assignments' %}active{% endif %}"><span class="icon">📋</span> Manage Assignments</a>
-        <a href="{{ url_for('admin_materials') }}" class="admin-nav-item {% if request.endpoint=='admin_materials' %}active{% endif %}"><span class="icon">📚</span> Study Materials</a>
-        <a href="{{ url_for('admin_gallery') }}" class="admin-nav-item {% if request.endpoint=='admin_gallery' %}active{% endif %}"><span class="icon">🖼️</span> Gallery Management</a>
-        <a href="{{ url_for('admin_facilities') }}" class="admin-nav-item {% if request.endpoint=='admin_facilities' %}active{% endif %}"><span class="icon">🏫</span> Facilities</a>
-        <a href="{{ url_for('admin_routines') }}" class="admin-nav-item {% if request.endpoint=='admin_routines' %}active{% endif %}"><span class="icon">🕐</span> Routine Management</a>
-        <a href="{{ url_for('admin_teachers') }}" class="admin-nav-item {% if request.endpoint=='admin_teachers' %}active{% endif %}"><span class="icon">👨‍🏫</span> Teacher Management</a>
-        <a href="{{ url_for('admin_students') }}" class="admin-nav-item {% if request.endpoint=='admin_students' %}active{% endif %}"><span class="icon">🎓</span> Student Management</a>
-        <a href="{{ url_for('admin_attendance') }}" class="admin-nav-item {% if request.endpoint=='admin_attendance' %}active{% endif %}"><span class="icon">✅</span> Attendance</a>
-        <a href="{{ url_for('admin_events') }}" class="admin-nav-item {% if request.endpoint=='admin_events' %}active{% endif %}"><span class="icon">📅</span> Events</a>
+        {% if not current_admin_perms or current_admin_perms.can_manage_notices %}
+        <a href="{{ url_for('admin_notices') }}" class="admin-nav-item {% if request.endpoint=='admin_notices' %}active{% endif %}"><span class="icon">📢</span> Manage Notices</a>{% endif %}
+        {% if not current_admin_perms or current_admin_perms.can_manage_results %}
+        <a href="{{ url_for('admin_results') }}" class="admin-nav-item {% if request.endpoint=='admin_results' %}active{% endif %}"><span class="icon">📊</span> Manage Results</a>{% endif %}
+        {% if not current_admin_perms or current_admin_perms.can_manage_assignments %}
+        <a href="{{ url_for('admin_assignments') }}" class="admin-nav-item {% if request.endpoint=='admin_assignments' %}active{% endif %}"><span class="icon">📋</span> Manage Assignments</a>{% endif %}
+        {% if not current_admin_perms or current_admin_perms.can_manage_materials %}
+        <a href="{{ url_for('admin_materials') }}" class="admin-nav-item {% if request.endpoint=='admin_materials' %}active{% endif %}"><span class="icon">📚</span> Study Materials</a>{% endif %}
+        {% if not current_admin_perms or current_admin_perms.can_manage_gallery %}
+        <a href="{{ url_for('admin_gallery') }}" class="admin-nav-item {% if request.endpoint=='admin_gallery' %}active{% endif %}"><span class="icon">🖼️</span> Gallery Management</a>{% endif %}
+        {% if not current_admin_perms or current_admin_perms.can_manage_facilities %}
+        <a href="{{ url_for('admin_facilities') }}" class="admin-nav-item {% if request.endpoint=='admin_facilities' %}active{% endif %}"><span class="icon">🏫</span> Facilities</a>{% endif %}
+        {% if not current_admin_perms or current_admin_perms.can_manage_routines %}
+        <a href="{{ url_for('admin_routines') }}" class="admin-nav-item {% if request.endpoint=='admin_routines' %}active{% endif %}"><span class="icon">🕐</span> Routine Management</a>{% endif %}
+        {% if not current_admin_perms or current_admin_perms.can_manage_teachers %}
+        <a href="{{ url_for('admin_teachers') }}" class="admin-nav-item {% if request.endpoint=='admin_teachers' %}active{% endif %}"><span class="icon">👨‍🏫</span> Teacher Management</a>{% endif %}
+        {% if not current_admin_perms or current_admin_perms.can_manage_students %}
+        <a href="{{ url_for('admin_students') }}" class="admin-nav-item {% if request.endpoint=='admin_students' %}active{% endif %}"><span class="icon">🎓</span> Student Management</a>{% endif %}
+        {% if not current_admin_perms or current_admin_perms.can_manage_attendance %}
+        <a href="{{ url_for('admin_attendance') }}" class="admin-nav-item {% if request.endpoint=='admin_attendance' %}active{% endif %}"><span class="icon">✅</span> Attendance</a>{% endif %}
+        {% if not current_admin_perms or current_admin_perms.can_manage_events %}
+        <a href="{{ url_for('admin_events') }}" class="admin-nav-item {% if request.endpoint=='admin_events' %}active{% endif %}"><span class="icon">📅</span> Events</a>{% endif %}
       </div>
+      {% if not current_admin_perms or current_admin_perms.can_view_settings %}
       <div class="admin-nav-grp"><div class="admin-nav-grp-title">System</div>
         <a href="{{ url_for('admin_settings') }}" class="admin-nav-item {% if request.endpoint=='admin_settings' %}active{% endif %}"><span class="icon">🏅</span> Logo &amp; Images</a>
         <a href="{{ url_for('admin_settings') }}" class="admin-nav-item {% if request.endpoint=='admin_settings' %}active{% endif %}"><span class="icon">⚙️</span> Site Settings</a>
         <a href="{{ url_for('index') }}" class="admin-nav-item" target="_blank"><span class="icon">🌐</span> View Website</a>
       </div>
+      {% else %}
+      <div class="admin-nav-grp"><div class="admin-nav-grp-title">System</div>
+        <a href="{{ url_for('index') }}" class="admin-nav-item" target="_blank"><span class="icon">🌐</span> View Website</a>
+      </div>
+      {% endif %}
     </nav>
     <div class="admin-sb-footer">
+      {% if is_impersonating %}
+      <a href="{{ url_for('dev_exit_impersonation') }}" style="display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:var(--rs);color:#a5b4fc;font-size:.81rem;font-weight:600;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);margin-bottom:7px">👨‍💻 Exit to Developer</a>
+      {% endif %}
       <a href="{{ url_for('admin_logout') }}" style="display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:var(--rs);color:#fca5a5;font-size:.81rem;font-weight:600;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.14)">🚪 Logout</a>
     </div>
   </aside>
@@ -57,7 +97,9 @@
       <button id="adminToggle" style="display:none;padding:6px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--accent);border-radius:var(--rs);font-weight:700;font-family:var(--fb)">☰ Menu</button>
       <div style="margin-left:auto;font-size:.78rem;color:var(--text-muted)" id="currentDate"></div>
     </div>
+    <div class="admin-page-fade">
     {% block admin_content %}{% endblock %}
+    </div>
   </main>
 </div>
 

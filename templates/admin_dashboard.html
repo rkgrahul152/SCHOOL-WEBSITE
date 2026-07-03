@@ -5,122 +5,228 @@
 {% block admin_content %}
 <div class="admin-topbar-row">
   <div>
-    <div class="admin-page-title">Admin Dashboard</div>
-    <div class="admin-page-sub">Welcome back, {{ session.admin_name }} · Manage your school portal</div>
+    <div class="admin-page-title">🏠 Admin Dashboard</div>
+    <div class="admin-page-sub">Welcome back, {{ session.admin_name }} · {{ settings.school_name }}</div>
   </div>
   <a href="{{ url_for('index') }}" target="_blank" class="btn-outline" style="padding:7px 16px;font-size:.8rem">🌐 View Site</a>
 </div>
 
-<!-- 6 STAT CARDS -->
-<div class="stat-cards-row" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
-  <div class="sc blue"><div class="sc-icon">🎓</div><div><div class="sc-val">{{ stats.students }}</div><div class="sc-lbl">Total Students</div></div></div>
-  <div class="sc green"><div class="sc-icon">👨‍🏫</div><div><div class="sc-val">{{ stats.teachers }}</div><div class="sc-lbl">Total Teachers</div></div></div>
-  <div class="sc orange"><div class="sc-icon">📢</div><div><div class="sc-val">{{ stats.notices }}</div><div class="sc-lbl">Total Notices</div></div></div>
-  <div class="sc purple"><div class="sc-icon">📋</div><div><div class="sc-val">{{ stats.results }}</div><div class="sc-lbl">Total Assignments</div></div></div>
-  <div class="sc teal"><div class="sc-icon">🖼️</div><div><div class="sc-val">{{ stats.gallery }}</div><div class="sc-lbl">Gallery Photos</div></div></div>
-  <div class="sc red" style="display:{% if stats.facilities > 0 %}flex{% else %}flex{% endif %}"><div class="sc-icon">🏫</div><div><div class="sc-val">{{ stats.facilities }}</div><div class="sc-lbl">Facilities</div></div></div>
+<!-- 6 STAT CARDS (animated count-up) -->
+<div class="stat-cards-row" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+  <div class="sc blue"><div class="sc-icon">🎓</div><div><div class="sc-val" data-count="{{ stats.students }}">0</div><div class="sc-lbl">Total Students</div></div></div>
+  <div class="sc green"><div class="sc-icon">👨‍🏫</div><div><div class="sc-val" data-count="{{ stats.teachers }}">0</div><div class="sc-lbl">Teachers</div></div></div>
+  <div class="sc orange"><div class="sc-icon">📢</div><div><div class="sc-val" data-count="{{ stats.notices }}">0</div><div class="sc-lbl">Notices</div></div></div>
+  <div class="sc purple"><div class="sc-icon">📊</div><div><div class="sc-val" data-count="{{ stats.results }}">0</div><div class="sc-lbl">Results</div></div></div>
+  <div class="sc teal"><div class="sc-icon">🖼️</div><div><div class="sc-val" data-count="{{ stats.gallery }}">0</div><div class="sc-lbl">Gallery Photos</div></div></div>
+  <div class="sc red"><div class="sc-icon">✅</div><div><div class="sc-val" data-count="{{ stats.attendance }}">0</div><div class="sc-lbl">Attendance Records</div></div></div>
 </div>
 
-<!-- CHARTS ROW -->
-<div class="grid-2" style="gap:16px;margin-bottom:18px">
+<!-- CHARTS ROW: Students bar (left) + switchable Analytics tabs (right) -->
+<div class="grid-2" style="gap:18px;margin-bottom:20px">
   <div class="admin-card">
     <div class="admin-card-head">
       <div class="admin-card-title">📈 Students Overview</div>
-      <span style="font-size:.72rem;color:var(--text-muted)">Jan – Jun 2025</span>
+      <span style="font-size:.72rem;color:var(--text-muted)" id="chartLabel">By Class</span>
     </div>
     <div class="admin-card-body" style="padding:14px">
-      <div style="height:180px"><canvas id="studentLineChart"></canvas></div>
+      <div style="height:200px" class="chart-skeleton" id="studentChartWrap"><canvas id="studentLineChart"></canvas></div>
     </div>
   </div>
+
+  <!-- Switchable analytics card -->
   <div class="admin-card">
     <div class="admin-card-head">
-      <div class="admin-card-title">📊 Notices Summary</div>
-      <span style="font-size:.72rem;color:var(--text-muted)">Total: {{ stats.notices }}</span>
+      <div class="admin-card-title">📊 Analytics Overview</div>
+      <div class="chart-tabs" id="chartTabs">
+        <button class="chart-tab-btn active" data-tab="notices">🔔 Notices</button>
+        <button class="chart-tab-btn" data-tab="attendance">✅ Attendance</button>
+        <button class="chart-tab-btn" data-tab="results">📊 Results</button>
+      </div>
     </div>
-    <div class="admin-card-body" style="padding:14px;display:flex;align-items:center;justify-content:center">
-      <div style="height:160px;width:100%"><canvas id="noticesDonut"></canvas></div>
+    <div class="admin-card-body" style="padding:14px">
+      <div class="chart-pane active" id="pane-notices">
+        <div style="height:170px;width:100%" class="chart-skeleton"><canvas id="noticesDonut"></canvas></div>
+      </div>
+      <div class="chart-pane" id="pane-attendance">
+        <div style="height:170px;width:100%"><canvas id="attendanceChart"></canvas></div>
+      </div>
+      <div class="chart-pane" id="pane-results">
+        <div style="height:170px;width:100%"><canvas id="resultsChart"></canvas></div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- QUICK ACTIONS -->
+<!-- QUICK ACTIONS (permission-aware) -->
 <div class="admin-card" style="margin-bottom:18px">
   <div class="admin-card-head"><div class="admin-card-title">⚡ Quick Actions</div></div>
   <div class="admin-card-body">
     <div class="quick-actions-grid">
-      <a href="{{ url_for('admin_notices') }}" class="qa-btn qa1"><span class="qa-icon">📢</span><span class="qa-label">Add Notice</span></a>
-      <a href="{{ url_for('admin_results') }}" class="qa-btn qa2"><span class="qa-icon">📊</span><span class="qa-label">Upload Result</span></a>
-      <a href="{{ url_for('admin_assignments') }}" class="qa-btn qa3"><span class="qa-icon">📋</span><span class="qa-label">Add Assignment</span></a>
-      <a href="{{ url_for('admin_materials') }}" class="qa-btn qa4"><span class="qa-icon">📚</span><span class="qa-label">Upload Material</span></a>
-      <a href="{{ url_for('admin_events') }}" class="qa-btn qa5"><span class="qa-icon">📅</span><span class="qa-label">Add Event</span></a>
-      <a href="{{ url_for('admin_gallery') }}" class="qa-btn qa6"><span class="qa-icon">🖼️</span><span class="qa-label">Manage Gallery</span></a>
+      {% if not current_admin_perms or current_admin_perms.can_manage_notices %}
+      <a href="{{ url_for('admin_notices') }}" class="qa-btn qa1"><span class="qa-icon">📢</span><span class="qa-label">Add Notice</span></a>{% endif %}
+      {% if not current_admin_perms or current_admin_perms.can_manage_results %}
+      <a href="{{ url_for('admin_results') }}" class="qa-btn qa2"><span class="qa-icon">📊</span><span class="qa-label">Upload Result</span></a>{% endif %}
+      {% if not current_admin_perms or current_admin_perms.can_manage_assignments %}
+      <a href="{{ url_for('admin_assignments') }}" class="qa-btn qa3"><span class="qa-icon">📋</span><span class="qa-label">Add Assignment</span></a>{% endif %}
+      {% if not current_admin_perms or current_admin_perms.can_manage_materials %}
+      <a href="{{ url_for('admin_materials') }}" class="qa-btn qa4"><span class="qa-icon">📚</span><span class="qa-label">Upload Material</span></a>{% endif %}
+      {% if not current_admin_perms or current_admin_perms.can_manage_attendance %}
+      <a href="{{ url_for('admin_attendance') }}" class="qa-btn qa5"><span class="qa-icon">✅</span><span class="qa-label">Attendance</span></a>{% endif %}
+      {% if not current_admin_perms or current_admin_perms.can_manage_gallery %}
+      <a href="{{ url_for('admin_gallery') }}" class="qa-btn qa6"><span class="qa-icon">🖼️</span><span class="qa-label">Gallery</span></a>{% endif %}
     </div>
   </div>
 </div>
 
-<!-- RECENT NOTICES + RECENT ASSIGNMENTS -->
-<div class="grid-2" style="gap:16px;margin-bottom:18px">
+<!-- RECENT NOTICES + EVENTS -->
+<div class="grid-2" style="gap:18px;margin-bottom:18px">
+  {% if not current_admin_perms or current_admin_perms.can_manage_notices %}
   <div class="admin-card">
-    <div class="admin-card-head">
-      <div class="admin-card-title">📢 Recent Notices</div>
-      <a href="{{ url_for('admin_notices') }}" class="admin-card-link">View All →</a>
-    </div>
+    <div class="admin-card-head"><div class="admin-card-title">📢 Recent Notices</div><a href="{{ url_for('admin_notices') }}" class="admin-card-link">Manage →</a></div>
     <div class="admin-card-body" style="padding:0">
       <table class="admin-table"><thead><tr><th>Title</th><th>Category</th><th>Date</th></tr></thead><tbody>
         {% for n in recent_notices %}
         <tr>
           <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-            {% if n.is_urgent %}<span class="badge badge-red" style="margin-right:4px;font-size:.62rem">URG</span>{% endif %}{{ n.title }}
+            {% if n.is_urgent %}<span class="badge badge-red" style="font-size:.6rem;margin-right:4px">URG</span>{% endif %}{{ n.title }}
           </td>
           <td><span class="badge badge-gold">{{ n.category }}</span></td>
           <td style="font-size:.77rem;white-space:nowrap">{{ n.created_at[:10] if n.created_at else '—' }}</td>
         </tr>{% else %}
-        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:24px">No notices yet.</td></tr>
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:22px">No notices yet.</td></tr>
         {% endfor %}
       </tbody></table>
     </div>
   </div>
+  {% endif %}
+  {% if not current_admin_perms or current_admin_perms.can_manage_events %}
   <div class="admin-card">
-    <div class="admin-card-head">
-      <div class="admin-card-title">📋 Recent Assignments</div>
-      <a href="{{ url_for('admin_assignments') }}" class="admin-card-link">View All →</a>
-    </div>
+    <div class="admin-card-head"><div class="admin-card-title">📅 Upcoming Events</div><a href="{{ url_for('admin_events') }}" class="admin-card-link">Manage →</a></div>
     <div class="admin-card-body" style="padding:0">
-      <table class="admin-table"><thead><tr><th>Title</th><th>Class</th><th>Due</th></tr></thead><tbody>
-        {% for n in recent_events %}
+      <table class="admin-table"><thead><tr><th>Event</th><th>Type</th><th>Date</th></tr></thead><tbody>
+        {% for ev in recent_events %}
         <tr>
-          <td style="font-weight:600">{{ n.title }}</td>
-          <td><span class="badge badge-blue">{{ n.event_type }}</span></td>
-          <td style="font-size:.77rem">{{ n.event_date }}</td>
+          <td style="font-weight:600">{{ ev.title }}</td>
+          <td><span class="badge badge-blue">{{ ev.event_type }}</span></td>
+          <td style="font-size:.77rem;white-space:nowrap">{{ ev.event_date }}</td>
         </tr>{% else %}
-        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:24px">No data.</td></tr>
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:22px">No events.</td></tr>
         {% endfor %}
       </tbody></table>
     </div>
   </div>
-</div>
-
-<!-- SCHOOL INFO CARD -->
-<div class="admin-card">
-  <div class="admin-card-head">
-    <div class="admin-card-title">🏫 School Information</div>
-    <a href="{{ url_for('admin_settings') }}" class="admin-card-link">Edit Settings →</a>
-  </div>
-  <div class="admin-card-body">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
-      {% for lbl,val in [('School Name',settings.school_name),('Principal',settings.principal_name),('Phone',settings.phone),('Email',settings.email),('Address',settings.address),('Established',settings.established),('Affiliation','WBBSE & WBCHSE'),('Type','Government Aided')] %}
-      <div style="padding:11px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--rs)">
-        <div style="font-size:.66rem;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:3px">{{ lbl }}</div>
-        <div style="font-size:.82rem;color:var(--text-light)">{{ val }}</div>
-      </div>{% endfor %}
-    </div>
-  </div>
+  {% endif %}
 </div>
 
 {% block extra_js %}
 <script>
-window.addEventListener('load', function() {
-  initAdminCharts({{ stats.students }}, {{ stats.notices }});
+Chart.defaults.animation.duration = 700;
+Chart.defaults.animation.easing = 'easeOutQuart';
+
+let noticesChart, attendanceChart, resultsChart, studentChart;
+
+fetch('{{ url_for("admin_chart_data") }}')
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('studentChartWrap')?.classList.remove('chart-skeleton');
+
+    // ── Students by class (left card) ──
+    const lc = document.getElementById('studentLineChart');
+    if(lc && d.classes.labels.length) {
+      document.getElementById('chartLabel').textContent = 'Students per Class';
+      studentChart = new Chart(lc.getContext('2d'), {
+        type: 'bar',
+        data: { labels: d.classes.labels, datasets: [{
+          label: 'Students', data: d.classes.data,
+          backgroundColor: 'rgba(240,180,41,0.65)', borderColor: '#f0b429',
+          borderWidth: 1, borderRadius: 4, borderSkipped: false,
+        }]},
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#7a9abf', font: { size: 10 } } },
+            y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#7a9abf', font: { size: 10 } }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // ── Tab 1: Notices donut ──
+    const dc = document.getElementById('noticesDonut');
+    if(dc){
+      const labels = d.notices.labels.length ? d.notices.labels : ['No Notices'];
+      const data   = d.notices.data.length   ? d.notices.data   : [1];
+      const colors = ['#f0b429','#10b981','#3b82f6','#8b5cf6','#ef4444','#06b6d4','#f59e0b'];
+      noticesChart = new Chart(dc.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: colors.slice(0,labels.length), borderWidth:0, hoverOffset:5 }] },
+        options: { responsive:true, maintainAspectRatio:false, cutout:'68%',
+          plugins:{ legend:{ position:'right', labels:{ color:'#7a9abf', font:{size:10}, boxWidth:10, padding:8 } } } }
+      });
+    }
+
+    // ── Tab 2: Attendance last 7 days (grouped bar) ──
+    const ac = document.getElementById('attendanceChart');
+    if(ac){
+      const hasData = d.attendance.labels.length > 0;
+      attendanceChart = new Chart(ac.getContext('2d'), {
+        type: 'bar',
+        data: { labels: hasData ? d.attendance.labels : ['No data'],
+          datasets: [
+            { label:'Present', data: hasData ? d.attendance.present : [0], backgroundColor:'rgba(16,185,129,0.7)', borderRadius:4, borderSkipped:false },
+            { label:'Absent',  data: hasData ? d.attendance.absent  : [0], backgroundColor:'rgba(239,68,68,0.55)', borderRadius:4, borderSkipped:false },
+          ]},
+        options: { responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ labels:{ color:'#7a9abf', font:{size:10}, boxWidth:10 } } },
+          scales:{ x:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'#7a9abf',font:{size:9}} },
+                   y:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'#7a9abf',font:{size:10}}, beginAtZero:true } } }
+      });
+    }
+
+    // ── Tab 3: Results grade distribution ──
+    const rc = document.getElementById('resultsChart');
+    if(rc){
+      const labels = d.grades.labels.length ? d.grades.labels : ['No Results'];
+      const data   = d.grades.data.length   ? d.grades.data   : [1];
+      const colors = ['#10b981','#3b82f6','#f0b429','#8b5cf6','#ef4444','#06b6d4'];
+      resultsChart = new Chart(rc.getContext('2d'), {
+        type: 'polarArea',
+        data: { labels, datasets: [{ data, backgroundColor: colors.slice(0,labels.length).map(c=>c+'99') }] },
+        options: { responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ position:'right', labels:{ color:'#7a9abf', font:{size:10}, boxWidth:10, padding:8 } } },
+          scales:{ r:{ grid:{color:'rgba(255,255,255,.06)'}, ticks:{display:false}, pointLabels:{display:false} } } }
+      });
+    }
+
+    // ── Animated stat counters ──
+    document.querySelectorAll('.sc-val[data-count]').forEach(el => {
+      const target = parseInt(el.dataset.count, 10) || 0;
+      let cur = 0;
+      const step = Math.max(1, Math.ceil(target / 40));
+      const timer = setInterval(() => {
+        cur = Math.min(cur + step, target);
+        el.textContent = cur.toLocaleString('en-IN');
+        if (cur >= target) { clearInterval(timer); el.classList.add('count-pop'); }
+      }, 20);
+    });
+  })
+  .catch(err => console.warn('Chart data error:', err));
+
+// ── Chart tab switcher ──
+document.querySelectorAll('#chartTabs .chart-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#chartTabs .chart-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.chart-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('pane-' + btn.dataset.tab)?.classList.add('active');
+    // Nudge Chart.js to redraw now that the pane is visible again
+    setTimeout(() => {
+      if (btn.dataset.tab === 'notices' && noticesChart) noticesChart.resize();
+      if (btn.dataset.tab === 'attendance' && attendanceChart) attendanceChart.resize();
+      if (btn.dataset.tab === 'results' && resultsChart) resultsChart.resize();
+    }, 50);
+  });
 });
 </script>
 {% endblock %}

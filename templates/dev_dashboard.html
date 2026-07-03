@@ -1,0 +1,98 @@
+{% extends "dev_base.html" %}
+{% block title %}Dev Dashboard{% endblock %}
+{% block dev_content %}
+<div class="dev-topbar">
+  <div><div class="dev-page-title">👨‍💻 Developer Dashboard</div><div class="dev-page-sub">Full system overview · {{ settings.school_name }}</div></div>
+  <a href="{{ url_for('index') }}" target="_blank" class="btn-outline" style="padding:7px 15px;font-size:.79rem;border-color:rgba(99,102,241,.3);color:#818cf8">🌐 View Site</a>
+</div>
+
+<!-- 8 system stat cards -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px">
+  {% for icon,lbl,val,col in [
+    ('🎓','Students',stats.students,'blue'),('👨‍🏫','Teachers',stats.teachers,'green'),
+    ('🛡️','Admins',stats.admins,'purple'),('📢','Notices',stats.notices,'orange'),
+    ('📊','Results',stats.results,'teal'),('✅','Attendance',stats.attendance,'green'),
+    ('📋','Assignments',stats.assignments,'blue'),('🏫','Facilities',stats.facilities,'orange')
+  ] %}
+  <div class="dev-stat"><div class="dev-stat-icon">{{ icon }}</div>
+    <div><div class="dev-stat-val" data-count="{{ val }}">0</div><div class="dev-stat-lbl">{{ lbl }}</div></div>
+  </div>{% endfor %}
+</div>
+
+<!-- Charts row -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+  <div class="dev-card"><div class="dev-card-head"><div class="dev-card-title">📈 Students by Class</div></div>
+    <div class="dev-card-body" style="padding:14px"><div style="height:200px"><canvas id="devClassChart"></canvas></div></div>
+  </div>
+  <div class="dev-card"><div class="dev-card-head"><div class="dev-card-title">📊 Results Grade Distribution</div></div>
+    <div class="dev-card-body" style="padding:14px"><div style="height:200px"><canvas id="devGradeChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- Admins quick list -->
+<div class="dev-card">
+  <div class="dev-card-head"><div class="dev-card-title">👥 Admin Accounts ({{ admins|length }})</div>
+    <a href="{{ url_for('dev_admins') }}" style="font-size:.72rem;color:#818cf8">Manage All →</a></div>
+  <div class="dev-card-body" style="padding:0"><div style="overflow-x:auto"><table class="admin-table dev-table"><thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Scope</th><th>Status</th><th>Action</th></tr></thead><tbody>
+    {% for a in admins %}
+    <tr>
+      <td style="font-weight:700;color:var(--white)">{{ a.username }}</td>
+      <td>{{ a.name }}</td>
+      <td><span class="role-badge role-{{ a.role or 'admin' }}">{{ a.role or 'admin' }}</span></td>
+      <td><span class="badge {{ 'badge-green' if a.scope=='all' else 'badge-gold' }}">{{ a.scope or 'all' }}</span></td>
+      <td>{% if a.is_active %}<span class="badge badge-green">Active</span>{% else %}<span class="badge badge-red">Inactive</span>{% endif %}</td>
+      <td><a href="{{ url_for('dev_admins') }}" class="badge badge-blue">Edit →</a></td>
+    </tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+
+<!-- Recent activity -->
+<div class="dev-card">
+  <div class="dev-card-head"><div class="dev-card-title">📋 Recent Activity</div>
+    <a href="{{ url_for('dev_logs') }}" style="font-size:.72rem;color:#818cf8">Full Log →</a></div>
+  <div class="dev-card-body" style="padding:0"><div style="overflow-x:auto"><table class="admin-table dev-table"><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Detail</th><th>IP</th></tr></thead><tbody>
+    {% for l in logs[:10] %}
+    <tr>
+      <td style="font-size:.74rem;white-space:nowrap;color:#818cf8">{{ l.created_at[:16] if l.created_at else '—' }}</td>
+      <td><span class="role-badge role-{{ l.actor_type or 'admin' }}">{{ l.actor_name or '—' }}</span></td>
+      <td style="font-weight:600">{{ l.action }}</td>
+      <td style="font-size:.77rem;color:var(--text-muted)">{{ l.detail or '—' }}</td>
+      <td style="font-size:.72rem;color:#4f46e5">{{ l.ip or '—' }}</td>
+    </tr>{% else %}<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px">No activity yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.dev-stat-val[data-count]').forEach(el => {
+  const target = parseInt(el.dataset.count, 10) || 0;
+  let cur = 0; const step = Math.max(1, Math.ceil(target / 35));
+  const timer = setInterval(() => {
+    cur = Math.min(cur + step, target);
+    el.textContent = cur.toLocaleString('en-IN');
+    if (cur >= target) { clearInterval(timer); el.classList.add('count-pop'); }
+  }, 18);
+});
+fetch('{{ url_for("admin_chart_data") }}').then(r=>r.json()).then(d=>{
+  new Chart(document.getElementById('devClassChart').getContext('2d'),{
+    type:'bar',
+    data:{labels:d.classes.labels,datasets:[{label:'Students',data:d.classes.data,
+      backgroundColor:'rgba(99,102,241,0.6)',borderColor:'#818cf8',borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#818cf8',font:{size:10}}},
+              y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#818cf8',font:{size:10}}}}}
+  });
+  if(d.grades.labels.length){
+    new Chart(document.getElementById('devGradeChart').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:d.grades.labels,datasets:[{data:d.grades.data,
+        backgroundColor:['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ef4444','#06b6d4'],
+        borderWidth:0,hoverOffset:4}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+        plugins:{legend:{position:'right',labels:{color:'#818cf8',font:{size:10},boxWidth:10}}}}
+    });
+  }
+});
+</script>
+{% endblock %}
+{% endblock %}

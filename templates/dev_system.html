@@ -1,0 +1,48 @@
+{% extends "dev_base.html" %}
+{% block title %}System Info{% endblock %}
+{% block dev_content %}
+<div class="dev-topbar"><div><div class="dev-page-title">🖥️ System Information</div>
+<div class="dev-page-sub">Server environment, storage usage, and runtime stats</div></div></div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:20px">
+  {% for icon,lbl,val in [
+    ('🐍','Python Version',info.python_version),('🧪','Flask Version',info.flask_version),
+    ('💻','Platform',info.platform),('⏱️','Server Uptime',info.uptime),
+    ('🗄️','Database Engine',info.engine),('📦','DB File Size',info.db_size_mb ~ ' MB'),
+    ('🖼️','Images Storage',info.images_size_mb ~ ' MB'),('⚡','Cache Entries',info.cache_entries),
+  ] %}
+  <div class="dev-stat reveal-dev"><div class="dev-stat-icon">{{ icon }}</div>
+    <div><div class="dev-stat-val" style="font-size:1.05rem">{{ val }}</div><div class="dev-stat-lbl">{{ lbl }}</div></div>
+  </div>{% endfor %}
+</div>
+
+<div class="dev-card">
+  <div class="dev-card-head"><div class="dev-card-title">🛠️ System Tools</div></div>
+  <div class="dev-card-body">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+      <a href="{{ url_for('dev_clear_cache') }}" class="btn-outline dev-btn-anim" style="border-color:rgba(99,102,241,.3);color:#818cf8">🧹 Clear In-Memory Cache</a>
+      <a href="{{ url_for('dev_vacuum') }}" class="btn-gold dev-btn-anim" onclick="return confirm('Vacuum database now?')">🗄️ Vacuum Database</a>
+      <a href="{{ url_for('dev_backup') }}" class="btn-outline dev-btn-anim" style="border-color:rgba(99,102,241,.3);color:#818cf8">💾 Download Backup</a>
+    </div>
+
+    <details style="padding:14px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:var(--rs)">
+      <summary style="cursor:pointer;font-weight:700;color:#fca5a5;font-size:.85rem">⚠️ Danger Zone — Bulk Password Reset</summary>
+      <form method="POST" action="{{ url_for('dev_reset_all_passwords') }}" style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="text" name="new_password" class="form-control" style="width:auto;flex:1;min-width:180px" placeholder="New password for ALL students" value="student123" required>
+        <button type="submit" class="btn-danger" onclick="return confirm('This resets the password for EVERY student in the system. Continue?')">🔑 Reset ALL Student Passwords</button>
+      </form>
+      <div style="font-size:.72rem;color:var(--text-muted);margin-top:8px">Use this only if you need to reset every student's login in one shot (e.g. new academic year). This cannot be undone.</div>
+    </details>
+  </div>
+</div>
+
+<style>@keyframes devFadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.reveal-dev{animation:devFadeUp .5s ease both}
+.reveal-dev:nth-child(1){animation-delay:.03s}.reveal-dev:nth-child(2){animation-delay:.07s}
+.reveal-dev:nth-child(3){animation-delay:.11s}.reveal-dev:nth-child(4){animation-delay:.15s}
+.reveal-dev:nth-child(5){animation-delay:.19s}.reveal-dev:nth-child(6){animation-delay:.23s}
+.reveal-dev:nth-child(7){animation-delay:.27s}.reveal-dev:nth-child(8){animation-delay:.31s}
+.dev-btn-anim{transition:transform .18s ease,box-shadow .18s ease}
+.dev-btn-anim:hover{transform:translateY(-2px)}
+</style>
+{% endblock %}

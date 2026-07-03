@@ -1,6 +1,8 @@
-{% extends "admin_base.html" %}{% block title %}Results{% endblock %}
+{% extends "admin_base.html" %}
+{% block title %}Results{% endblock %}
 {% block admin_content %}
-<div class="admin-topbar-row"><div><div class="admin-page-title">📊 Manage Results</div><div class="admin-page-sub">Upload and manage student examination results</div></div></div>
+<div class="admin-topbar-row"><div><div class="admin-page-title">📊 Manage Results</div><div class="admin-page-sub">Upload and manage student examination results · {{ pagination.total }} total records</div></div></div>
+
 <div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">➕ Add Single Result</div></div>
   <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_add_result') }}">
     <div class="form-grid">
@@ -17,18 +19,24 @@
     </div>
     <div style="margin-top:13px"><button type="submit" class="btn-gold">💾 Save Result</button></div>
   </form></div></div>
-<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">📥 Bulk Import (CSV)</div></div>
+
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">📥 Bulk Import (CSV) — Fast entry for entire class</div></div>
   <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_bulk_results') }}">
     <div class="form-grid">
       <div class="form-group"><label>Class *</label><select name="class" class="form-control" required><option value="">Select</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}">Class {{ c }}</option>{% endfor %}</select></div>
       <div class="form-group"><label>Section *</label><select name="section" class="form-control" required><option>A</option><option>B</option><option>C</option><option>D</option><option>Science</option><option>Arts</option></select></div>
       <div class="form-group"><label>Exam Name *</label><input type="text" name="exam_name" class="form-control" placeholder="Annual Exam 2024-25" required></div>
       <div class="form-group"><label>Year</label><input type="number" name="year" class="form-control" value="{{ now.year }}"></div>
-      <div class="form-group" style="grid-column:1/-1"><label>CSV Data (roll,name,subject,marks,total,grade — one per line)</label><textarea name="bulk_data" class="form-control" rows="5" placeholder="1,Raju Barman,Mathematics,78,100,B+&#10;2,Priya Das,Mathematics,85,100,A"></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label>CSV Data (roll,name,subject,marks,total,grade — one per line)</label><textarea name="bulk_data" class="form-control" rows="6" placeholder="1,Raju Barman,Mathematics,78,100,B+&#10;2,Priya Das,Mathematics,85,100,A&#10;3,Arjun Roy,Mathematics,65,100,B+&#10;... (paste up to hundreds of rows at once)"></textarea>
+      <small style="color:var(--text-muted);font-size:.7rem;margin-top:4px">💡 Tip: Export marks from Excel/Google Sheets as CSV, then paste rows here. Handles 500+ rows instantly.</small></div>
     </div>
     <div style="margin-top:13px"><button type="submit" class="btn-gold">📥 Import Results</button></div>
   </form></div></div>
-<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">📋 Results ({{ results|length }})</div></div>
+
+<div class="admin-card"><div class="admin-card-head">
+  <div class="admin-card-title">📋 Results ({{ pagination.total }} total)</div>
+  <span style="font-size:.72rem;color:var(--text-muted)">Page {{ pagination.page }} of {{ pagination.total_pages }}</span>
+</div>
   <div class="admin-card-body" style="padding:12px">
     <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <select name="class" class="form-control" style="width:auto"><option value="">All Classes</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}" {{ 'selected' if filter_class==c else '' }}>Class {{ c }}</option>{% endfor %}</select>
@@ -46,4 +54,15 @@
       <td><a href="{{ url_for('admin_delete_result',i=r.id) }}" class="btn-danger" onclick="return confirm('Delete?')">🗑</a></td></tr>
       {% else %}<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:32px">No results found.</td></tr>{% endfor %}
     </tbody></table></div>
-  </div></div>{% endblock %}
+
+    <!-- PAGINATION -->
+    {% if pagination.total_pages > 1 %}
+    <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:18px">
+      {% set qs = '&class='+filter_class+'&section='+filter_section+'&exam='+filter_exam %}
+      {% if pagination.has_prev %}<a href="{{ url_for('admin_results') }}?page={{ pagination.page-1 }}{{ qs }}" class="btn-outline btn-sm">← Prev</a>{% endif %}
+      <span style="font-size:.82rem;color:var(--text-muted);padding:0 8px">Page {{ pagination.page }} of {{ pagination.total_pages }} ({{ pagination.total }} records)</span>
+      {% if pagination.has_next %}<a href="{{ url_for('admin_results') }}?page={{ pagination.page+1 }}{{ qs }}" class="btn-outline btn-sm">Next →</a>{% endif %}
+    </div>
+    {% endif %}
+  </div></div>
+{% endblock %}

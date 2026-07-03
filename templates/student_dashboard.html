@@ -31,10 +31,11 @@
 
   <!-- ═══ MAIN ══════════════════════════════════════════ -->
   <div class="dash-main">
+    <div class="dash-page-fade">
     <div class="dash-header">
       <div>
         <button id="dashToggle" style="display:none;padding:6px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--accent);border-radius:var(--rs);font-weight:700;font-family:var(--fb);margin-bottom:10px">☰</button>
-        <div class="dash-title">Student Dashboard</div>
+        <div class="dash-title dash-greeting">Student Dashboard</div>
         <div class="dash-subtitle" id="currentDate"></div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
@@ -52,20 +53,20 @@
       <div class="stat-cards-row">
         <div class="sc green">
           <div class="sc-icon">📅</div>
-          <div><div class="sc-val">{{ att_pct }}%</div><div class="sc-lbl">Attendance</div><div class="sc-sub">This Month</div></div>
+          <div><div class="sc-val" data-count="{{ att_pct }}" data-suffix="%">0%</div><div class="sc-lbl">Attendance</div><div class="sc-sub">This Month</div></div>
         </div>
         <div class="sc orange">
           <div class="sc-icon">📋</div>
-          <div><div class="sc-val">{{ assignments|length }}</div><div class="sc-lbl">Homework</div><div class="sc-sub">Pending</div></div>
+          <div><div class="sc-val" data-count="{{ assignments|length }}">0</div><div class="sc-lbl">Homework</div><div class="sc-sub">Pending</div></div>
         </div>
         <div class="sc purple">
           <div class="sc-icon">📝</div>
-          <div><div class="sc-val">2</div><div class="sc-lbl">Upcoming Exams</div><div class="sc-sub">Next 15 Days</div></div>
+          <div><div class="sc-val" data-count="2">0</div><div class="sc-lbl">Upcoming Exams</div><div class="sc-sub">Next 15 Days</div></div>
         </div>
         <div class="sc blue">
           <div class="sc-icon">🏆</div>
           {% set avg = ((results|sum(attribute='marks_obtained') / results|sum(attribute='total_marks')) * 100)|round(0)|int if results and results|sum(attribute='total_marks') > 0 else 0 %}
-          <div><div class="sc-val">{{ 'A+' if avg>=85 else 'A' if avg>=75 else 'B+' if avg>=65 else 'B' if avg>=55 else 'C' }}</div><div class="sc-lbl">Overall Grade</div><div class="sc-sub">Excellent</div></div>
+          <div><div class="sc-val count-pop">{{ 'A+' if avg>=85 else 'A' if avg>=75 else 'B+' if avg>=65 else 'B' if avg>=55 else 'C' }}</div><div class="sc-lbl">Overall Grade</div><div class="sc-sub">Excellent</div></div>
         </div>
       </div>
 
@@ -149,10 +150,10 @@
     <div class="dash-panel" id="p-attendance">
       <div class="panel-title">📅 Attendance Record</div>
       <div class="stat-cards-row">
-        <div class="sc green"><div class="sc-icon">📅</div><div><div class="sc-val">{{ total }}</div><div class="sc-lbl">Total Days</div></div></div>
-        <div class="sc blue"><div class="sc-icon">✅</div><div><div class="sc-val" style="color:var(--c-green)">{{ present }}</div><div class="sc-lbl">Present</div></div></div>
-        <div class="sc red"><div class="sc-icon">❌</div><div><div class="sc-val">{{ total - present }}</div><div class="sc-lbl">Absent</div></div></div>
-        <div class="sc orange"><div class="sc-icon">📊</div><div><div class="sc-val">{{ att_pct }}%</div><div class="sc-lbl">Percentage</div></div></div>
+        <div class="sc green"><div class="sc-icon">📅</div><div><div class="sc-val" data-count="{{ total }}">0</div><div class="sc-lbl">Total Days</div></div></div>
+        <div class="sc blue"><div class="sc-icon">✅</div><div><div class="sc-val" data-count="{{ present }}" style="color:var(--c-green)">0</div><div class="sc-lbl">Present</div></div></div>
+        <div class="sc red"><div class="sc-icon">❌</div><div><div class="sc-val" data-count="{{ total - present }}">0</div><div class="sc-lbl">Absent</div></div></div>
+        <div class="sc orange"><div class="sc-icon">📊</div><div><div class="sc-val" data-count="{{ att_pct }}" data-suffix="%">0%</div><div class="sc-lbl">Percentage</div></div></div>
       </div>
       {% if attendance %}
       <div style="overflow-x:auto;border-radius:var(--r);border:1px solid rgba(255,255,255,.07)">
@@ -260,6 +261,7 @@
       </div>
     </div>
 
+  </div><!-- /dash-page-fade -->
   </div><!-- /dash-main -->
 </div>
 

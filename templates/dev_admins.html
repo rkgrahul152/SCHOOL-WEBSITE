@@ -1,0 +1,161 @@
+{% extends "dev_base.html" %}
+{% block title %}Manage Admins{% endblock %}
+{% block dev_content %}
+<div class="dev-topbar"><div><div class="dev-page-title">👥 Admin & Teacher Management</div>
+<div class="dev-page-sub">Create accounts · Set permissions · Control class/section access</div></div></div>
+
+<!-- ADD NEW ADMIN -->
+<div class="dev-card">
+  <div class="dev-card-head"><div class="dev-card-title">➕ Create New Admin / Teacher Account</div></div>
+  <div class="dev-card-body">
+    <form method="POST" action="{{ url_for('dev_add_admin') }}">
+      <div class="form-grid">
+        <div class="form-group"><label>Full Name *</label><input type="text" name="name" class="form-control" placeholder="e.g. Mr. Rajesh Das" required></div>
+        <div class="form-group"><label>Username *</label><input type="text" name="username" class="form-control" placeholder="e.g. rajesh_das" required></div>
+        <div class="form-group"><label>Password *</label><input type="text" name="password" class="form-control" value="admin123" required></div>
+        <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control" placeholder="email@school.in"></div>
+        <div class="form-group"><label>Role</label>
+          <select name="role" class="form-control">
+            <option value="admin">Admin (Full Panel)</option>
+            <option value="teacher">Teacher (Limited Panel)</option>
+          </select></div>
+        <div class="form-group"><label>Access Scope</label>
+          <select name="scope" class="form-control" id="scopeSelect" onchange="toggleClassAccess(this.value)">
+            <option value="all">All Classes (Full Access)</option>
+            <option value="restricted">Restricted (Specific Classes Only)</option>
+          </select></div>
+      </div>
+
+      <!-- Class access (shown only for restricted) -->
+      <div id="classAccessBox" style="display:none;margin-top:16px;padding:14px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:var(--rs)">
+        <div style="font-size:.8rem;font-weight:700;color:#818cf8;margin-bottom:12px">📚 Assign Specific Class-Sections</div>
+        <div id="classRows">
+          <div class="class-row" style="display:flex;gap:8px;margin-bottom:8px">
+            <select name="classes[]" class="form-control" style="width:auto"><option value="">Class</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}">Class {{ c }}</option>{% endfor %}</select>
+            <select name="sections[]" class="form-control" style="width:auto"><option value="">Section</option>{% for s in ['A','B','C','D','Science','Arts'] %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select>
+          </div>
+        </div>
+        <button type="button" onclick="addClassRow()" class="btn-outline" style="padding:5px 12px;font-size:.78rem;border-color:rgba(99,102,241,.3);color:#818cf8">+ Add Another Class</button>
+      </div>
+
+      <!-- Permission checkboxes -->
+      <div style="margin-top:16px;padding:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--rs)">
+        <div style="font-size:.8rem;font-weight:700;color:var(--white);margin-bottom:12px">🔐 Feature Permissions</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+          {% for key,label,default in [
+            ('p_notices','📢 Manage Notices',True),('p_results','📊 Manage Results',True),
+            ('p_attendance','✅ Manage Attendance',True),('p_assignments','📋 Assignments',True),
+            ('p_materials','📚 Study Materials',True),('p_gallery','🖼️ Gallery',False),
+            ('p_teachers','👨‍🏫 Manage Teachers',False),('p_students','🎓 Manage Students',False),
+            ('p_routines','🕐 Class Routines',True),('p_events','📅 Events',False),
+            ('p_facilities','🏫 Facilities',False),('p_settings','⚙️ Site Settings',False)
+          ] %}
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--rs);cursor:pointer;font-size:.82rem;color:var(--text-light)">
+            <input type="checkbox" name="{{ key }}" {% if default %}checked{% endif %} style="accent-color:#6366f1;width:14px;height:14px">{{ label }}
+          </label>{% endfor %}
+        </div>
+      </div>
+      <div style="margin-top:14px"><button type="submit" style="padding:10px 24px;border-radius:var(--rs);background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;font-weight:800;font-size:.88rem;border:none;cursor:pointer;font-family:var(--fb)">✅ Create Account</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ALL ADMINS -->
+<div class="dev-card">
+  <div class="dev-card-head"><div class="dev-card-title">👥 All Admin/Teacher Accounts ({{ admins|length }})</div></div>
+  <div class="dev-card-body" style="padding:0">
+    {% for a in admins %}
+    <div style="border-bottom:1px solid rgba(99,102,241,.1);padding:18px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(99,102,241,.15);border:2px solid rgba(99,102,241,.3);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:.9rem;color:#a5b4fc">{{ a.name[0] if a.name else 'A' }}</div>
+          <div>
+            <div style="font-weight:700;color:var(--white)">{{ a.name }} <span class="role-badge role-{{ a.role or 'admin' }}" style="margin-left:5px">{{ a.role or 'admin' }}</span></div>
+            <div style="font-size:.74rem;color:#818cf8">@{{ a.username }}{% if a.email %} · {{ a.email }}{% endif %}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+          <span class="badge {{ 'badge-green' if a.scope=='all' else 'badge-gold' }}">{{ '🌐 All Classes' if a.scope=='all' else '🔒 Restricted' }}</span>
+          <span class="{{ 'badge badge-green' if a.is_active else 'badge badge-red' }}">{{ 'Active' if a.is_active else 'Disabled' }}</span>
+          <a href="{{ url_for('dev_toggle_admin',aid=a.id) }}" class="btn-outline btn-sm" style="border-color:rgba(99,102,241,.3);color:#818cf8">{{ '🙈 Disable' if a.is_active else '✅ Enable' }}</a>
+          {% if a.is_active %}<a href="{{ url_for('dev_login_as',aid=a.id) }}" class="btn-outline btn-sm" style="border-color:rgba(16,185,129,.35);color:#6ee7b7">👁️ Login as Admin</a>{% endif %}
+          {% if a.username != 'admin' %}
+          <a href="{{ url_for('dev_delete_admin',aid=a.id) }}" class="btn-danger" onclick="return confirm('Delete this admin?')">🗑</a>{% endif %}
+        </div>
+      </div>
+
+      <!-- Permission pills -->
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+        {% for pkey,plabel in [('can_manage_notices','Notices'),('can_manage_results','Results'),
+          ('can_manage_attendance','Attendance'),('can_manage_assignments','Assignments'),
+          ('can_manage_materials','Materials'),('can_manage_gallery','Gallery'),
+          ('can_manage_teachers','Teachers'),('can_manage_students','Students'),
+          ('can_manage_routines','Routines'),('can_manage_events','Events'),
+          ('can_manage_facilities','Facilities'),('can_view_settings','Settings')] %}
+        <span class="perm-toggle {{ 'perm-on' if a[pkey] else 'perm-off' }}">{{ '✅' if a[pkey] else '❌' }} {{ plabel }}</span>
+        {% endfor %}
+      </div>
+
+      <!-- Edit permissions form (collapsible) -->
+      <details>
+        <summary style="cursor:pointer;font-size:.78rem;color:#818cf8;font-weight:600;padding:4px 0">✏️ Edit Permissions & Access</summary>
+        <form method="POST" action="{{ url_for('dev_update_permissions',aid=a.id) }}" style="margin-top:12px;padding:14px;background:rgba(99,102,241,.05);border-radius:var(--rs)">
+          <div class="form-grid" style="margin-bottom:12px">
+            <div class="form-group"><label>Access Scope</label>
+              <select name="scope" class="form-control" id="scope_{{ a.id }}" onchange="toggleClassAccessEdit('{{ a.id }}',this.value)">
+                <option value="all" {{ 'selected' if a.scope=='all' else '' }}>All Classes</option>
+                <option value="restricted" {{ 'selected' if a.scope=='restricted' else '' }}>Restricted</option>
+              </select></div>
+          </div>
+          <div id="classBox_{{ a.id }}" style="display:{{ 'block' if a.scope=='restricted' else 'none' }};margin-bottom:12px;padding:10px;background:rgba(255,255,255,.03);border-radius:var(--rs)">
+            <div style="font-size:.74rem;color:#818cf8;margin-bottom:8px">Assign class-sections:</div>
+            <div id="classRows_{{ a.id }}">
+              <div style="display:flex;gap:7px;margin-bottom:6px">
+                <select name="classes[]" class="form-control" style="width:auto"><option value="">Class</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}">Class {{ c }}</option>{% endfor %}</select>
+                <select name="sections[]" class="form-control" style="width:auto"><option value="">Section</option>{% for s in ['A','B','C','D','Science','Arts'] %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select>
+              </div>
+            </div>
+            <button type="button" onclick="addClassRowEdit('{{ a.id }}')" class="btn-outline btn-sm" style="border-color:rgba(99,102,241,.3);color:#818cf8;margin-top:4px">+ Add Class</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:7px;margin-bottom:12px">
+            {% for pkey,plabel in [('p_notices','📢 Notices'),('p_results','📊 Results'),
+              ('p_attendance','✅ Attendance'),('p_assignments','📋 Assignments'),
+              ('p_materials','📚 Materials'),('p_gallery','🖼️ Gallery'),
+              ('p_teachers','👨‍🏫 Teachers'),('p_students','🎓 Students'),
+              ('p_routines','🕐 Routines'),('p_events','📅 Events'),
+              ('p_facilities','🏫 Facilities'),('p_settings','⚙️ Settings')] %}
+            <label style="display:flex;align-items:center;gap:7px;padding:7px 9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--rs);cursor:pointer;font-size:.79rem;color:var(--text-light)">
+              <input type="checkbox" name="{{ pkey }}" {% set dbkey='can_manage_'+pkey[2:] if pkey!='p_settings' else 'can_view_settings' %}{% if a[dbkey] %}checked{% endif %} style="accent-color:#6366f1">{{ plabel }}
+            </label>{% endfor %}
+          </div>
+          <!-- Reset password -->
+          <div style="display:flex;gap:8px;align-items:center;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);flex-wrap:wrap">
+            <button type="submit" style="padding:8px 18px;border-radius:var(--rs);background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;font-weight:700;font-size:.82rem;border:none;cursor:pointer;font-family:var(--fb)">💾 Save Permissions</button>
+          </div>
+        </form>
+        <!-- Separate password reset -->
+        <form method="POST" action="{{ url_for('dev_reset_password',aid=a.id) }}" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <input type="text" name="new_password" class="form-control" style="width:auto;flex:1;min-width:140px" placeholder="New password..." required>
+          <button type="submit" class="btn-danger" onclick="return confirm('Reset password?')" style="white-space:nowrap">🔑 Reset Password</button>
+        </form>
+      </details>
+    </div>
+    {% else %}<div style="padding:36px;text-align:center;color:var(--text-muted)">No admins yet.</div>{% endfor %}
+  </div>
+</div>
+
+<script>
+function toggleClassAccess(v){document.getElementById('classAccessBox').style.display=v==='restricted'?'block':'none'}
+function toggleClassAccessEdit(id,v){document.getElementById('classBox_'+id).style.display=v==='restricted'?'block':'none'}
+function addClassRow(){
+  const t=document.getElementById('classRows').querySelector('.class-row').cloneNode(true);
+  t.querySelectorAll('select').forEach(s=>s.value='');
+  document.getElementById('classRows').appendChild(t);
+}
+function addClassRowEdit(id){
+  const src=document.getElementById('classRows_'+id).querySelector('div').cloneNode(true);
+  src.querySelectorAll('select').forEach(s=>s.value='');
+  document.getElementById('classRows_'+id).appendChild(src);
+}
+</script>
+{% endblock %}

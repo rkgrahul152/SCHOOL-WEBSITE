@@ -1,7 +1,9 @@
-{% extends "admin_base.html" %}{% block title %}Students{% endblock %}
+{% extends "admin_base.html" %}
+{% block title %}Students{% endblock %}
 {% block admin_content %}
-<div class="admin-topbar-row"><div><div class="admin-page-title">🎓 Manage Students</div><div class="admin-page-sub">Add and manage student accounts</div></div></div>
-<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">➕ Add Student</div></div>
+<div class="admin-topbar-row"><div><div class="admin-page-title">🎓 Manage Students</div><div class="admin-page-sub">{{ pagination.total }} total students across all classes</div></div></div>
+
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">➕ Add Single Student</div></div>
   <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_add_student') }}">
     <div class="form-grid">
       <div class="form-group"><label>Class *</label><select name="class" class="form-control" required><option value="">Select</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}">Class {{ c }}</option>{% endfor %}</select></div>
@@ -14,17 +16,43 @@
     </div>
     <div style="margin-top:13px"><button type="submit" class="btn-gold">🎓 Add Student</button></div>
   </form></div></div>
-<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">🎓 Students ({{ students|length }})</div></div>
+
+<div class="admin-card"><div class="admin-card-head"><div class="admin-card-title">📥 Bulk Import (CSV) — Add entire class at once</div></div>
+  <div class="admin-card-body"><form method="POST" action="{{ url_for('admin_bulk_students') }}">
+    <div class="form-grid">
+      <div class="form-group"><label>Class *</label><select name="class" class="form-control" required><option value="">Select</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}">Class {{ c }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label>Section *</label><select name="section" class="form-control" required><option>A</option><option>B</option><option>C</option><option>D</option><option>Science</option><option>Arts</option></select></div>
+      <div class="form-group" style="grid-column:1/-1"><label>CSV Data (roll,name,guardian,phone — one per line)</label><textarea name="bulk_data" class="form-control" rows="6" placeholder="1,Raju Barman,Ramesh Barman,9876543210&#10;2,Priya Das,Sunil Das,9876543211&#10;3,Arjun Roy,Bimal Roy,9876543212&#10;... (paste hundreds of students at once)"></textarea>
+      <small style="color:var(--text-muted);font-size:.7rem;margin-top:4px">💡 All imported students get default password: <code style="color:var(--accent)">student123</code> — they can be changed individually later.</small></div>
+    </div>
+    <div style="margin-top:13px"><button type="submit" class="btn-gold">📥 Import Students</button></div>
+  </form></div></div>
+
+<div class="admin-card"><div class="admin-card-head">
+  <div class="admin-card-title">🎓 Students ({{ pagination.total }} total)</div>
+  <span style="font-size:.72rem;color:var(--text-muted)">Page {{ pagination.page }} of {{ pagination.total_pages }}</span>
+</div>
   <div class="admin-card-body" style="padding:12px">
     <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <select name="class" class="form-control" style="width:auto"><option value="">All Classes</option>{% for c in ['5','6','7','8','9','10','11','12'] %}<option value="{{ c }}" {{ 'selected' if filter_class==c else '' }}>Class {{ c }}</option>{% endfor %}</select>
       <select name="section" class="form-control" style="width:auto"><option value="">All Sections</option>{% for s in ['A','B','C','D','Science','Arts'] %}<option value="{{ s }}" {{ 'selected' if filter_section==s else '' }}>{{ s }}</option>{% endfor %}</select>
+      <input type="text" name="search" class="form-control" style="width:auto" placeholder="🔍 Search by name or roll..." value="{{ search }}">
       <button type="submit" class="btn-gold btn-sm">🔍 Filter</button>
-      <a href="{{ url_for('admin_students') }}" class="btn-outline" style="padding:5px 12px;font-size:.78rem">Clear</a>
+      <a href="{{ url_for('admin_students') }}" class="btn-outline" style="padding:6px 12px;font-size:.78rem">Clear</a>
     </form>
     <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>#</th><th>Roll</th><th>Name</th><th>Class</th><th>Section</th><th>Guardian</th><th>Phone</th><th></th></tr></thead><tbody>
-      {% for s in students %}<tr><td>{{ loop.index }}</td><td style="font-weight:700;color:var(--accent)">{{ s.roll_number }}</td><td style="font-weight:600;color:var(--white)">{{ s.name }}</td><td>{{ s.class }}</td><td><span class="badge badge-gold">{{ s.section }}</span></td><td style="font-size:.79rem">{{ s.guardian or '—' }}</td><td style="font-size:.79rem">{{ s.phone or '—' }}</td>
+      {% for s in students %}<tr><td>{{ loop.index + (pagination.page-1)*50 }}</td><td style="font-weight:700;color:var(--accent)">{{ s.roll_number }}</td><td style="font-weight:600;color:var(--white)">{{ s.name }}</td><td>{{ s.class }}</td><td><span class="badge badge-gold">{{ s.section }}</span></td><td style="font-size:.79rem">{{ s.guardian or '—' }}</td><td style="font-size:.79rem">{{ s.phone or '—' }}</td>
       <td><a href="{{ url_for('admin_delete_student',i=s.id) }}" class="btn-danger" onclick="return confirm('Remove?')">🗑</a></td></tr>
       {% else %}<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px">No students found.</td></tr>{% endfor %}
     </tbody></table></div>
-  </div></div>{% endblock %}
+
+    {% if pagination.total_pages > 1 %}
+    <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:18px">
+      {% set qs = '&class='+filter_class+'&section='+filter_section+'&search='+search %}
+      {% if pagination.has_prev %}<a href="{{ url_for('admin_students') }}?page={{ pagination.page-1 }}{{ qs }}" class="btn-outline btn-sm">← Prev</a>{% endif %}
+      <span style="font-size:.82rem;color:var(--text-muted);padding:0 8px">Page {{ pagination.page }} of {{ pagination.total_pages }} ({{ pagination.total }} students)</span>
+      {% if pagination.has_next %}<a href="{{ url_for('admin_students') }}?page={{ pagination.page+1 }}{{ qs }}" class="btn-outline btn-sm">Next →</a>{% endif %}
+    </div>
+    {% endif %}
+  </div></div>
+{% endblock %}

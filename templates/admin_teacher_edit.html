@@ -1,0 +1,100 @@
+{% extends "admin_base.html" %}
+{% block title %}Edit Teacher – {{ teacher.name }}{% endblock %}
+{% block admin_content %}
+<div class="admin-topbar-row">
+  <div>
+    <div class="admin-page-title">✏️ Edit Teacher Profile</div>
+    <div class="admin-page-sub">Update information and photo for {{ teacher.name }}</div>
+  </div>
+  <a href="{{ url_for('admin_teachers') }}" class="btn-outline" style="padding:7px 16px;font-size:.8rem">← Back to Teachers</a>
+</div>
+
+<div style="display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start">
+
+  <!-- LEFT: Photo card -->
+  <div class="admin-card">
+    <div class="admin-card-head"><div class="admin-card-title">📸 Profile Photo</div></div>
+    <div class="admin-card-body" style="text-align:center">
+      <div class="teacher-photo-preview" id="photoPreview" style="margin:0 auto 14px">
+        {% if teacher.photo %}
+          <img src="{{ url_for('static',filename='images/'+teacher.photo) }}" alt="{{ teacher.name }}" id="previewImg">
+        {% else %}
+          <span id="previewInitial">{{ teacher.name[0] }}</span>
+        {% endif %}
+      </div>
+      <div style="font-weight:700;color:var(--white);margin-bottom:3px">{{ teacher.name }}</div>
+      <div style="font-size:.75rem;color:var(--accent);margin-bottom:3px">{{ teacher.designation }}</div>
+      <div style="font-size:.78rem;color:var(--text-muted)">{{ teacher.subject }}</div>
+      <div style="margin-top:12px;font-size:.71rem;color:var(--text-muted)">
+        Upload a square photo<br>for best results (JPG/PNG)
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Edit form -->
+  <div class="admin-card">
+    <div class="admin-card-head"><div class="admin-card-title">📝 Teacher Information</div></div>
+    <div class="admin-card-body">
+      <form method="POST" action="{{ url_for('admin_edit_teacher', tid=teacher.id) }}" enctype="multipart/form-data">
+
+        <!-- Photo upload inside form -->
+        <div class="form-group" style="margin-bottom:18px;padding:14px;background:rgba(240,180,41,.05);border:1px solid rgba(240,180,41,.15);border-radius:var(--rs)">
+          <label>📷 Upload New Photo (JPG/PNG/WEBP)</label>
+          <input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png,.webp" id="photoInput">
+          <small style="color:var(--text-muted);font-size:.7rem">Replaces the current photo. Leave empty to keep existing.</small>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group"><label>Full Name *</label>
+            <input type="text" name="name" class="form-control" value="{{ teacher.name }}" required></div>
+          <div class="form-group"><label>Designation *</label>
+            <select name="designation" class="form-control">
+              {% for d in ['Headmaster','Asst. Headmaster','Assistant Teacher','Senior Teacher','Group D Staff'] %}
+              <option value="{{ d }}" {{ 'selected' if teacher.designation==d else '' }}>{{ d }}</option>{% endfor %}
+            </select></div>
+          <div class="form-group"><label>Subject *</label>
+            <input type="text" name="subject" class="form-control" value="{{ teacher.subject or '' }}" placeholder="e.g. Mathematics" required></div>
+          <div class="form-group"><label>Qualification</label>
+            <input type="text" name="qualification" class="form-control" value="{{ teacher.qualification or '' }}" placeholder="e.g. M.Sc., B.Ed."></div>
+          <div class="form-group"><label>Experience</label>
+            <input type="text" name="experience" class="form-control" value="{{ teacher.experience or '' }}" placeholder="e.g. 10 years"></div>
+          <div class="form-group"><label>Phone</label>
+            <input type="text" name="phone" class="form-control" value="{{ teacher.phone or '' }}" placeholder="+91-XXXXX-XXXXX"></div>
+          <div class="form-group"><label>Email</label>
+            <input type="email" name="email" class="form-control" value="{{ teacher.email or '' }}" placeholder="teacher@school.in"></div>
+          <div class="form-group"><label>Display Order</label>
+            <input type="number" name="sort_order" class="form-control" value="{{ teacher.sort_order or 99 }}" min="1">
+            <small style="font-size:.68rem;color:var(--text-muted)">Lower number = shown first</small></div>
+        </div>
+
+        <div style="margin-top:16px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--rs)">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="checkbox" name="is_active" value="1" {% if teacher.is_active %}checked{% endif %} style="accent-color:var(--accent);width:15px;height:15px">
+            <span style="color:var(--text-light);font-size:.86rem">✅ Teacher is Active (shown on website)</span>
+          </label>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:18px">
+          <button type="submit" class="btn-gold" style="padding:11px 26px;font-size:.92rem">💾 Save Changes</button>
+          <a href="{{ url_for('admin_teachers') }}" class="btn-outline" style="padding:10px 20px;font-size:.88rem">Cancel</a>
+          <a href="{{ url_for('admin_delete_teacher',i=teacher.id) }}" class="btn-danger" style="padding:10px 16px;margin-left:auto" onclick="return confirm('Permanently delete {{ teacher.name }}?')">🗑 Delete</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Live photo preview when selecting new file
+document.getElementById('photoInput')?.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const prev = document.getElementById('photoPreview');
+    prev.innerHTML = `<img src="${ev.target.result}" id="previewImg" style="width:100%;height:100%;object-fit:cover">`;
+  };
+  reader.readAsDataURL(file);
+});
+</script>
+{% endblock %}

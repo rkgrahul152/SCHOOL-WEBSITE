@@ -1,0 +1,49 @@
+{% extends "dev_base.html" %}
+{% block title %}Activity Logs{% endblock %}
+{% block dev_content %}
+<div class="dev-topbar"><div><div class="dev-page-title">📋 Activity Logs</div>
+<div class="dev-page-sub">Complete audit trail — every login, add, edit, and delete across the system</div></div></div>
+
+<div class="dev-card"><div class="dev-card-body" style="padding:12px">
+  <div style="display:flex;gap:7px;flex-wrap:wrap">
+    <a href="{{ url_for('dev_logs') }}" class="chart-tab-btn {{ 'active' if not actor_filter else '' }}" style="{{ '' if actor_filter else 'background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff' }};border:1px solid rgba(99,102,241,.25)">All</a>
+    <a href="{{ url_for('dev_logs') }}?actor=admin" class="chart-tab-btn {{ 'active' if actor_filter=='admin' else '' }}" style="{{ 'background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff' if actor_filter=='admin' else 'color:#818cf8' }};border:1px solid rgba(99,102,241,.25)">🛡️ Admin</a>
+    <a href="{{ url_for('dev_logs') }}?actor=developer" class="chart-tab-btn {{ 'active' if actor_filter=='developer' else '' }}" style="{{ 'background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff' if actor_filter=='developer' else 'color:#818cf8' }};border:1px solid rgba(99,102,241,.25)">👨‍💻 Developer</a>
+    <a href="{{ url_for('dev_logs') }}?actor=student" class="chart-tab-btn {{ 'active' if actor_filter=='student' else '' }}" style="{{ 'background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff' if actor_filter=='student' else 'color:#818cf8' }};border:1px solid rgba(99,102,241,.25)">🎓 Student</a>
+  </div>
+</div></div>
+
+<div class="dev-card"><div class="dev-card-head">
+  <div class="dev-card-title">📋 Activity Log ({{ pagination.total }} total entries)</div>
+  <span style="font-size:.72rem;color:#818cf8">Page {{ pagination.page }} of {{ pagination.total_pages }}</span>
+</div>
+<div class="dev-card-body" style="padding:0"><div style="overflow-x:auto"><table class="admin-table dev-table">
+  <thead><tr><th>#</th><th>Time</th><th>Actor</th><th>Type</th><th>Action</th><th>Detail</th><th>IP</th></tr></thead>
+  <tbody>
+    {% for l in logs %}
+    <tr>
+      <td style="color:#4f46e5">{{ pagination.total - (pagination.page-1)*50 - loop.index0 }}</td>
+      <td style="font-size:.73rem;white-space:nowrap;color:#818cf8">{{ l.created_at[:16] if l.created_at else '—' }}</td>
+      <td style="font-weight:600;color:var(--white)">{{ l.actor_name or '—' }}</td>
+      <td><span class="role-badge role-{{ l.actor_type or 'admin' }}">{{ l.actor_type or 'admin' }}</span></td>
+      <td>
+        {% if 'FAILED' in l.action or 'DELETE' in l.action %}<span class="badge badge-red" style="font-size:.7rem">{{ l.action }}</span>
+        {% elif 'ADD' in l.action or 'LOGIN' in l.action and 'FAILED' not in l.action %}<span class="badge badge-green" style="font-size:.7rem">{{ l.action }}</span>
+        {% elif 'IMPERSONATE' in l.action %}<span class="badge badge-gold" style="font-size:.7rem">{{ l.action }}</span>
+        {% else %}<span class="badge badge-blue" style="font-size:.7rem">{{ l.action }}</span>{% endif %}
+      </td>
+      <td style="font-size:.77rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis">{{ l.detail or '—' }}</td>
+      <td style="font-size:.71rem;color:#4f46e5">{{ l.ip or '—' }}</td>
+    </tr>{% else %}
+    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:36px">No activity logged yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table></div></div>
+{% if pagination.total_pages > 1 %}
+<div style="display:flex;justify-content:center;gap:8px;padding:14px">
+  {% if pagination.has_prev %}<a href="{{ url_for('dev_logs') }}?page={{ pagination.page-1 }}" class="btn-outline btn-sm" style="border-color:rgba(99,102,241,.3);color:#818cf8">← Prev</a>{% endif %}
+  <span style="color:#818cf8;font-size:.81rem;padding:0 8px">Page {{ pagination.page }} of {{ pagination.total_pages }}</span>
+  {% if pagination.has_next %}<a href="{{ url_for('dev_logs') }}?page={{ pagination.page+1 }}" class="btn-outline btn-sm" style="border-color:rgba(99,102,241,.3);color:#818cf8">Next →</a>{% endif %}
+</div>{% endif %}
+</div>
+{% endblock %}

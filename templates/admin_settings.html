@@ -99,6 +99,51 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════
+  SECTION 3B: SCHOOL VIDEO (homepage door-reveal)
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head">
+    <div class="admin-card-title">🎬 School Video (Homepage Door Reveal)</div>
+    <span style="font-size:.72rem;color:var(--text-muted)">Plays when visitors click the doors at the bottom of the homepage</span>
+  </div>
+  <div class="admin-card-body">
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:18px">
+      <div style="width:200px;height:112px;border-radius:var(--rs);overflow:hidden;border:2px solid rgba(240,180,41,.2);background:var(--navy-mid);flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative">
+        {% if settings.school_video %}
+          <video src="{{ url_for('static',filename='videos/'+settings.school_video) }}" style="width:100%;height:100%;object-fit:cover" muted></video>
+          <div style="position:absolute;bottom:6px;left:6px;background:rgba(16,185,129,.8);color:white;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:3px">✅ Video Uploaded</div>
+        {% elif settings.school_video_youtube %}
+          <div style="text-align:center;color:var(--text-muted)"><span style="font-size:1.8rem">▶️</span><div style="font-size:.68rem;margin-top:4px">YouTube video linked</div></div>
+        {% else %}
+          <div style="text-align:center;color:var(--text-muted)"><span style="font-size:1.8rem">🎬</span><div style="font-size:.68rem;margin-top:4px">No video yet</div></div>
+        {% endif %}
+      </div>
+      <div style="flex:1;min-width:240px">
+        <form method="POST" action="{{ url_for('admin_upload_video') }}" enctype="multipart/form-data" style="margin-bottom:10px">
+          <div class="form-group" style="margin-bottom:10px">
+            <label>Upload Video File (MP4, WEBM, OGG, MOV — up to 300MB)</label>
+            <input type="file" name="school_video" class="form-control" accept=".mp4,.webm,.ogg,.mov" required>
+          </div>
+          <button type="submit" class="btn-gold">📤 Upload Video</button>
+        </form>
+        {% if settings.school_video %}<a href="{{ url_for('admin_remove_video') }}" class="btn-danger" style="display:inline-block" onclick="return confirm('Remove the uploaded video?')">🗑 Remove Video</a>{% endif %}
+      </div>
+    </div>
+    <div style="padding-top:14px;border-top:1px solid rgba(255,255,255,.07)">
+      <form method="POST" action="{{ url_for('admin_save_settings') }}">
+        <div class="form-grid">
+          <div class="form-group"><label>Or use a YouTube URL instead (used only if no file is uploaded)</label>
+            <input type="text" name="school_video_youtube" class="form-control" value="{{ settings.school_video_youtube or '' }}" placeholder="https://www.youtube.com/watch?v=..."></div>
+          <div class="form-group"><label>Section Title</label>
+            <input type="text" name="video_section_title" class="form-control" value="{{ settings.video_section_title or 'Experience Our School' }}"></div>
+        </div>
+        <div style="margin-top:12px"><button type="submit" class="btn-gold">💾 Save Video Settings</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
   SECTION 4: SCHOOL INFORMATION
 ══════════════════════════════════════════════════════ -->
 <div class="admin-card">
@@ -241,5 +286,64 @@
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════
+  SECTION 10: DATABASE PERFORMANCE & TOOLS
+══════════════════════════════════════════════════════ -->
+<div class="admin-card">
+  <div class="admin-card-head">
+    <div class="admin-card-title">🗄️ Database Performance & Tools</div>
+    <span style="font-size:.72rem;color:var(--text-muted)">Optimized for 5,000–10,000+ students</span>
+  </div>
+  <div class="admin-card-body">
+    <div id="dbStatsBox" style="margin-bottom:16px">
+      <button onclick="loadDbStats()" class="btn-outline" style="padding:8px 18px;font-size:.84rem">📊 Load Live Database Stats</button>
+      <div id="dbStatsResult" style="margin-top:14px"></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)">
+      <a href="{{ url_for('admin_db_vacuum') }}" class="btn-gold" onclick="return confirm('Optimize database now? This may take a few seconds for large datasets.')">🧹 Vacuum & Optimize Database</a>
+      <a href="{{ url_for('admin_db_backup') }}" class="btn-outline" style="padding:9px 18px">💾 Download Database Backup</a>
+    </div>
+    <div style="margin-top:14px;padding:12px 14px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:var(--rs)">
+      <div style="font-size:.78rem;color:#6ee7b7;font-weight:700;margin-bottom:6px">✅ Performance Features Active</div>
+      <div style="font-size:.74rem;color:var(--text-muted);line-height:1.7">
+        • WAL mode (concurrent reads while writing)<br>
+        • 12 database indexes on all lookup columns<br>
+        • 32MB query cache + 256MB memory-mapped I/O<br>
+        • Admin tables paginated at 50 rows/page<br>
+        • Settings cached in-memory (5 min TTL)<br>
+        • Bulk CSV import for students &amp; results
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function loadDbStats(){
+  const box=document.getElementById('dbStatsResult');
+  box.innerHTML='<p style="color:var(--text-muted);font-size:.82rem">Loading...</p>';
+  fetch('{{ url_for("admin_db_stats") }}').then(r=>r.json()).then(d=>{
+    let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">';
+    const items=[
+      ['👥 Students', d.students],['📊 Results', d.results],['✅ Attendance', d.attendance],
+      ['📢 Notices', d.notices],['📋 Assignments', d.assignments],['📚 Materials', d.materials],
+      ['🕐 Routines', d.routines],['🖼️ Gallery', d.gallery],
+    ];
+    items.forEach(([label,val])=>{
+      html+=`<div style="padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;text-align:center">
+        <div style="font-family:var(--fd);font-size:1.2rem;color:var(--accent)">${val.toLocaleString()}</div>
+        <div style="font-size:.68rem;color:var(--text-muted)">${label}</div></div>`;
+    });
+    html+='</div>';
+    html+=`<div style="margin-top:12px;padding:10px 12px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;font-size:.76rem;color:var(--text-muted)">
+      <strong style="color:#93c5fd">Engine:</strong> ${d.engine} &nbsp; | &nbsp;
+      <strong style="color:#93c5fd">Result Query:</strong> ${d.result_query_ms}ms &nbsp; | &nbsp;
+      <strong style="color:#93c5fd">Student Query:</strong> ${d.student_query_ms}ms`;
+    if(d.index_count) html+=` &nbsp; | &nbsp; <strong style="color:#93c5fd">Indexes:</strong> ${d.index_count}`;
+    html+='</div>';
+    box.innerHTML=html;
+  }).catch(()=>{box.innerHTML='<p style="color:#fca5a5;font-size:.82rem">Failed to load stats.</p>';});
+}
+</script>
 
 {% endblock %}

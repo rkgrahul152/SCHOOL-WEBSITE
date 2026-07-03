@@ -56,16 +56,76 @@ document.querySelectorAll('.ctab').forEach(tab=>{
   });
 });
 
-// Dashboard sidebar panels
+// ══════════════════════════════════════════════════════
+// Animated number counters (used on admin/dev/student stat cards)
+// ══════════════════════════════════════════════════════
+window.animateCounters = function(root){
+  root = root || document;
+  root.querySelectorAll('[data-count]').forEach(el=>{
+    const target = parseFloat(el.dataset.count) || 0;
+    const suffix = el.dataset.suffix || '';
+    const isInt = Number.isInteger(target);
+    let cur = 0;
+    if(el._countTimer) clearInterval(el._countTimer);
+    const step = Math.max(target/36, isInt ? 1 : 0.1);
+    el._countTimer = setInterval(()=>{
+      cur = Math.min(cur+step, target);
+      el.textContent = (isInt ? Math.round(cur) : cur.toFixed(1)).toLocaleString ?
+        (isInt ? Math.round(cur).toLocaleString('en-IN') : cur.toFixed(1)) + suffix :
+        (isInt ? Math.round(cur) : cur.toFixed(1)) + suffix;
+      if(cur >= target){
+        clearInterval(el._countTimer);
+        el.classList.add('count-pop');
+        setTimeout(()=>el.classList.remove('count-pop'), 350);
+      }
+    }, 18);
+  });
+};
+document.addEventListener('DOMContentLoaded', ()=>window.animateCounters());
+
+// Dashboard sidebar panels — animated switch with stagger + counter replay
 document.querySelectorAll('.sb-item[data-panel]').forEach(item=>{
   item.addEventListener('click',()=>{
+    const targetId = item.dataset.panel;
+    const targetPanel = document.getElementById(targetId);
+    const current = document.querySelector('.dash-panel.active');
+    if(current === targetPanel) return;
+
     document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
-    document.querySelectorAll('.dash-panel').forEach(p=>p.classList.remove('active'));
     item.classList.add('active');
-    document.getElementById(item.dataset.panel)?.classList.add('active');
-    // Trigger chart redraw if needed
-    window.dispatchEvent(new Event('resize'));
+
+    if(current){
+      current.classList.add('panel-leaving');
+      setTimeout(()=>{
+        current.classList.remove('active','panel-leaving');
+        targetPanel?.classList.add('active');
+        staggerReveal(targetPanel);
+        window.animateCounters(targetPanel);
+        window.dispatchEvent(new Event('resize'));
+      }, 140);
+    } else {
+      targetPanel?.classList.add('active');
+      staggerReveal(targetPanel);
+      window.animateCounters(targetPanel);
+      window.dispatchEvent(new Event('resize'));
+    }
   });
+});
+
+// Stagger-reveal list rows / cards inside a freshly-shown panel
+function staggerReveal(panel){
+  if(!panel) return;
+  const items = panel.querySelectorAll('.hw-item, .notice-item, .event-item, .tt-today tbody tr, .result-table tbody tr, .student-att-row');
+  items.forEach((el,i)=>{
+    el.style.animation = 'none';
+    void el.offsetWidth; // reflow to restart animation
+    el.style.animation = `panelItemIn .38s cubic-bezier(.22,1,.36,1) both`;
+    el.style.animationDelay = Math.min(i*35, 400) + 'ms';
+  });
+}
+// Reveal the initially-active panel's items on first load too
+document.addEventListener('DOMContentLoaded', ()=>{
+  staggerReveal(document.querySelector('.dash-panel.active'));
 });
 
 // Mobile sidebar toggles

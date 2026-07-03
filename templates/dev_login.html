@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Developer Login – {{ settings.school_name }}{% endblock %}
+{% block content %}
+<div class="dev-login-page">
+  <div class="dev-login-card">
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="width:68px;height:68px;background:rgba(99,102,241,.15);border:2px solid rgba(99,102,241,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.9rem;margin:0 auto 14px">👨‍💻</div>
+      <div style="font-family:var(--fd);font-size:1.3rem;color:var(--white);margin-bottom:3px">Developer Access</div>
+      <div style="font-size:.8rem;color:#818cf8">Super Admin · {{ settings.school_name }}</div>
+    </div>
+    <div style="height:1px;background:rgba(99,102,241,.2);margin-bottom:20px"></div>
+    <form method="POST" style="display:flex;flex-direction:column;gap:13px">
+      <div class="form-group"><label style="color:#818cf8">👤 Username</label><input type="text" name="username" class="form-control" style="border-color:rgba(99,102,241,.25)" placeholder="Developer username" required autocomplete="username"></div>
+      <div class="form-group"><label style="color:#818cf8">🔑 Password</label><input type="password" name="password" class="form-control" style="border-color:rgba(99,102,241,.25)" placeholder="••••••••••" required></div>
+      <button type="submit" style="padding:11px;border-radius:var(--rs);background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;font-weight:800;font-size:.92rem;border:none;cursor:pointer;font-family:var(--fb);transition:opacity .2s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">👨‍💻 Access Developer Panel</button>
+    </form>
+    <div style="text-align:center;margin-top:14px"><a href="{{ url_for('admin_login') }}" style="font-size:.78rem;color:#818cf8">← Admin Login</a> &nbsp;·&nbsp; <a href="{{ url_for('index') }}" style="font-size:.78rem;color:#818cf8">Home</a></div>
+    <div style="margin-top:14px;padding:10px 12px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:var(--rs);font-size:.72rem;color:#64748b">
+      <strong style="color:#818cf8">Demo:</strong> User: <code style="color:var(--white)">developer</code> · Pass: <code style="color:var(--white)">dev@rgl2024</code>
+    </div>
+  </div>
+</div>{% endblock %}
